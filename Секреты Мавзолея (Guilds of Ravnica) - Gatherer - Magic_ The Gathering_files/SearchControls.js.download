@@ -1,0 +1,105 @@
+﻿// ajax methods
+function UpdateSimpleSearchFields()
+{
+    // get the new boolean values
+    var useName  = $(ClientIDs.SearchCardName).checked;
+    var useTypes = $(ClientIDs.SearchCardTypes).checked;
+    var useText  = $(ClientIDs.SearchCardText).checked;
+        
+    new Ajax.Request(
+        UtilitiesHandler,
+        {
+            method: 'get',
+            parameters: 'method=SearchSettings&useName='+useName+'&useTypes='+useTypes+'&useText='+useText
+        }
+    );
+    
+    /*
+    var currentOptions = $('currentOptions');
+    
+    if (currentOptions != null)
+    {
+        var optionsText = "";
+        
+        // text
+        if(useName)
+        {
+            optionsText += "Name, ";
+        }
+        if(useTypes)
+        {
+            optionsText += "Types, ";
+        }
+        if(useText)
+        {
+            optionsText += "Text, ";
+        }
+        
+        // colors
+        var useW = $(ClientIDs.SearchWhite).checked;
+        var useU = $(ClientIDs.SearchBlue).checked;
+        var useB = $(ClientIDs.SearchBlack).checked;
+        var useR = $(ClientIDs.SearchRed).checked;
+        var useG = $(ClientIDs.SearchGreen).checked;
+        var useExclude = $(ClientIDs.SearchColorExclude).checked;
+        var useExact = $(ClientIDs.SearchColorExact).checked;
+        var colorString = "";
+        colorString += (useW ? "W" : "") + (useU ? "U" : "") + (useB ? "B" : "") + (useR ? "R" : "") + (useG ? "G" : "");
+        colorString += (useExclude ? " (exclusive)" : "");
+        colorString += (useExact ? " (exact)" : "");
+        
+        // format
+        var format = $(ClientIDs.FormatList).value;
+        
+        if(optionsText.length > 2)
+        {
+            optionsText = optionsText.substring(0, optionsText.length - 2);
+        }
+        if (colorString.length > 0)
+        {
+            optionsText += ", " + colorString;
+        }
+        if (format.length > 0)
+        {
+            optionsText += ", " + format;
+        }
+        currentOptions.innerHTML = " | Search: " + optionsText;
+    }
+    */
+}
+
+function SubscribeToIntermediateSearchFieldPrefsEvents()
+{   
+//    Event.observe($(ClientIDs.SearchWhite), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.SearchBlue), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.SearchBlack), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.SearchRed), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.SearchGreen), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.SearchColorExclude), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.SearchColorExact), 'change', UpdateSimpleSearchFields);
+//    Event.observe($(ClientIDs.FormatList), 'change', UpdateSimpleSearchFields);
+}
+
+function UpdateSimpleSearchRestrictions(obj)
+{
+    var id = obj.id;
+    var otherId = "";
+    if(id == ClientIDs.SearchColorMulti)
+    {
+        otherId = ClientIDs.SearchColorExclude;
+    }
+    else
+    {
+        otherId = ClientIDs.SearchColorMulti;
+    }
+    
+    if(obj.checked)
+    {
+        $(otherId).checked = false;
+        $(otherId).disabled = "disabled";
+    }
+    else
+    {
+        $(otherId).disabled = "";
+    }
+}

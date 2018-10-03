@@ -1,0 +1,398 @@
+﻿var starArray = new Array();
+
+function SubscribeToStarEvents(event)
+{
+    if(document.images)
+    {
+        var image1 = new Image(100, 100);
+        var image2 = new Image(100, 100);
+        var image3 = new Image(100, 100);
+        var image4 = new Image(100, 100);
+        var image5 = new Image(100, 100);
+        var image6 = new Image(100, 100);
+        
+        if(typeof(window['leftStar']) != 'undefined')
+        {
+            image1.src = leftStar;
+            image2.src = leftStarClear;
+            image3.src = leftStarSelected;
+            image4.src = rightStar;
+            image5.src = rightStarClear;
+            image6.src = rightStarSelected;        
+        }
+        
+        if(typeof(window['leftStarSmall']) != 'undefined')
+        {
+            image1.src = leftStarSmall;
+            image2.src = leftStarClearSmall;
+            image3.src = leftStarSelectedSmall;
+            image4.src = rightStarSmall;
+            image5.src = rightStarClearSmall;
+            image6.src = rightStarSelectedSmall;        
+        }
+    }
+    
+    var stars = $$('.' + Constants.StyleSheetClasses.Star, '.' + Constants.StyleSheetClasses.StarSmall);
+    
+    for(var i = 0; i < stars.length; i++)
+    {
+        var star = stars[i];
+        
+        if(i % 2 == 0)
+        {
+            star.left = true;
+        }
+        
+        var details = star.parentNode.className.split(',');
+        
+        if(details.length >= 2)
+        {
+            star.type = details[0];
+            star.identifier = details[1];  
+            
+            if(details.length == 3)
+            {
+                star.updateResultElementID = details[2];
+            }          
+        }
+        
+        star.rating = (i % 10) + 1;
+        star.initialImage = star.src;
+                
+        star.observe('mouseout', ResetStarsToVote);        
+        star.observe('mouseover', HandleStarMouseEvent);
+        star.observe('click', RecordVote);
+        
+        starArray.push(star);
+    }
+}
+
+function UpdatePlayerRatingDetails(star, playerRating, displayDateRated)
+{
+    var origionalStarContainer = star.parentNode.parentNode;    
+    var origionalTextRatings = $(origionalStarContainer).select('span');
+    
+    if(origionalTextRatings.length >= 4)
+    {
+        origionalTextRatings[1].innerHTML = (playerRating / 2);
+        origionalTextRatings[2].innerHTML = displayDateRated;            
+    }
+}
+
+function UpdateRelatedStarsAfterVote(starContainer, rating, displayRating, totalVotes, starClassName)
+{   
+    if(starContainer != null)
+    { 
+        var textRatings = starContainer.select('span'); 
+        var stars = starContainer.select('img');
+
+        if(rating >= 9.5)
+        {
+            rating = 10;
+        }
+
+        if(textRatings.length >= 4)
+        {
+            textRatings[1].innerHTML = displayRating;
+            textRatings[2].innerHTML = totalVotes;
+        }
+
+        if(typeof(window['leftStar']) != 'undefined')
+        {
+            var leftStarLocal = leftStar;
+            var rightStarLocal = rightStar;
+            var leftStarClearLocal = leftStarClear;
+            var rightStarClearLocal = rightStarClear;
+            var leftStarSelectedLocal = leftStarSelected;
+            var rightStarSelectedLocal = rightStarSelected;
+        }
+        else
+        {
+            var leftStarLocal = leftStarSmall;
+            var rightStarLocal = rightStarSmall;
+            var leftStarClearLocal = leftStarClearSmall;
+            var rightStarClearLocal = rightStarClearSmall;
+            var leftStarSelectedLocal = leftStarSelectedSmall;
+            var rightStarSelectedLocal = rightStarSelectedSmall;
+        }
+
+        if(starClassName == Constants.StyleSheetClasses.StarSmall)
+        {
+            leftStarLocal = leftStarSmall;
+            rightStarLocal = rightStarSmall;
+            leftStarClearLocal = leftStarClearSmall;
+            rightStarClearLocal = rightStarClearSmall;
+            leftStarSelectedLocal = leftStarSelectedSmall;
+            rightStarSelectedLocal = rightStarSelectedSmall;
+        }
+
+        for(var i = 0; i < stars.length; i++)
+        {
+            var currentStar = stars[i];
+            
+            if(i % 2 == 0)
+            {
+                currentStar.left = true;
+            }
+            
+            currentStar.rating = (i + 1) % (stars.length + 1);
+            
+            if(currentStar.left)
+            {
+                if(currentStar.rating <= rating)
+                {                        
+                    currentStar.src = leftStarLocal;
+                    currentStar.initialImage = leftStarLocal;   
+                }
+                else
+                {
+                    currentStar.src = leftStarClearLocal;
+                    currentStar.initialImage = leftStarClearLocal;
+                }
+            }
+            else
+            {
+                if(currentStar.rating <= rating)
+                {
+                    currentStar.src = rightStarLocal;
+                    currentStar.initialImage = rightStarLocal;
+                }
+                else
+                {
+                    currentStar.src = rightStarClearLocal;
+                    currentStar.initialImage = rightStarClearLocal;
+                }
+            }     
+        }
+    }
+}
+
+function HandleVoteResult(rpcResult, star)
+{
+    if(rpcResult != null)
+    {
+        if(rpcResult.OperationResult)
+        {
+            if(star.updateResultElementID != null && star.updateResultElementID != '')
+            {
+                $(star.updateResultElementID).update(new Element('img', { 'src': '../../Images/checkmark_small.png', alt: ''}));
+            }
+            
+            var starContainer = null;
+            
+            if(typeof(voteUpdateMatrix) != 'undefined')
+            {
+                starContainer = $(voteUpdateMatrix.get(star.parentNode.id));            
+            }
+            else
+            {
+                starContainer = star.parentNode.parentNode;
+            }
+            
+            UpdatePlayerRatingDetails(star, rpcResult.Data.PlayerRating, rpcResult.Data.DisplayDateRated);
+            UpdateRelatedStarsAfterVote(starContainer, rpcResult.Data.Rating, rpcResult.Data.DisplayRating, rpcResult.Data.TotalVotes, star.className);
+        }
+        else
+        {
+            if(star.updateResultElementID != null)
+            {
+                var linkElement = new Element('a', { 'href': '../Help.aspx#exclamationpoint' }).update(new Element('img', { 'src': '../../Images/exclamation_small.png', alt: ''}));            
+                
+                $(star.updateResultElementID).update(linkElement);
+            }
+        }        
+    }
+}
+
+function UpdateStarSetAfterVote(star)
+{
+    if(typeof(window['leftStar']) != 'undefined')
+    {
+        var leftStarLocal = leftStar;
+        var rightStarLocal = rightStar;
+        var leftStarClearLocal = leftStarClear;
+        var rightStarClearLocal = rightStarClear;
+        var leftStarSelectedLocal = leftStarSelected;
+        var rightStarSelectedLocal = rightStarSelected;
+    }
+    else
+    {
+        var leftStarLocal = leftStarSmall;
+        var rightStarLocal = rightStarSmall;
+        var leftStarClearLocal = leftStarClearSmall;
+        var rightStarClearLocal = rightStarClearSmall;
+        var leftStarSelectedLocal = leftStarSelectedSmall;
+        var rightStarSelectedLocal = rightStarSelectedSmall;
+    }
+    
+    var foundGroup = false;
+        
+    for(var i = 0; i < starArray.length; i++)
+    {
+        var currentStar = starArray[i];
+        
+        if(star.parentNode.id == currentStar.parentNode.id)
+        {        
+            if(!foundGroup && currentStar.className == Constants.StyleSheetClasses.StarSmall)
+            {
+                leftStarLocal = leftStarSmall;
+                rightStarLocal = rightStarSmall;
+                leftStarClearLocal = leftStarClearSmall;
+                rightStarClearLocal = rightStarClearSmall;
+                leftStarSelectedLocal = leftStarSelectedSmall;
+                rightStarSelectedLocal = rightStarSelectedSmall;
+            }
+            
+            foundGroup = true;
+            
+            if(currentStar.left)
+            {
+                if(currentStar.rating <= star.rating)
+                {
+                    currentStar.src = leftStarSelectedLocal;
+                    currentStar.initialImage = leftStarSelectedLocal;   
+                }
+                else
+                {
+                    currentStar.src = leftStarClearLocal;
+                    currentStar.initialImage = leftStarClearLocal;
+                }
+            }
+            else
+            {
+                if(currentStar.rating <= star.rating)
+                {
+                    currentStar.src = rightStarSelectedLocal;
+                    currentStar.initialImage = rightStarSelectedLocal;
+                }
+                else
+                {
+                    currentStar.src = rightStarClearLocal;
+                    currentStar.initialImage = rightStarClearLocal;
+                }
+            }
+        }
+        else if(foundGroup)
+        {
+            break;
+        }
+    }
+}
+
+function RecordVote(event)
+{
+    var star = Event.element(event);
+    
+    new Ajax.Request(utilitiesHandler , {
+                method: 'post',
+                parameters: { method: 'RateCard', type: star.type, printedcarduniqueid: star.identifier, multiverseid: multiverseID, rating: star.rating },
+                onSuccess:  function(transport) {
+                    var result = eval('(' + transport.responseText + ')');
+                    
+                    HandleVoteResult(result, star);
+                    
+                    if(result.OperationResult)
+                    {
+                        UpdateStarSetAfterVote(star);
+                    }                   
+                },
+                onFailure: function(transport) {
+                    var result = eval('(' + transport.responseText + ')');
+                    
+                    HandleVoteResult(result, star);  
+                }      
+            });    
+}
+
+function ResetStarsToVote(event)
+{
+    var star = Event.element(event);
+    
+    for(var i = 0; i < starArray.length; i++)
+    {
+        var currentStar = starArray[i];
+        
+        if(star.parentNode.id == currentStar.parentNode.id)
+        {
+            currentStar.src = currentStar.initialImage;
+        }
+    }
+}
+
+function HandleStarMouseEvent(event)
+{
+    var star = Event.element(event);
+    var found = false;
+    var foundGroup = false;
+    
+    if(typeof(window['leftStar']) != 'undefined')
+    {
+        var leftStarLocal = leftStar;
+        var rightStarLocal = rightStar;
+        var leftStarClearLocal = leftStarClear;
+        var rightStarClearLocal = rightStarClear;
+        var leftStarSelectedLocal = leftStarSelected;
+        var rightStarSelectedLocal = rightStarSelected;
+    }
+    else
+    {
+        var leftStarLocal = leftStarSmall;
+        var rightStarLocal = rightStarSmall;
+        var leftStarClearLocal = leftStarClearSmall;
+        var rightStarClearLocal = rightStarClearSmall;
+        var leftStarSelectedLocal = leftStarSelectedSmall;
+        var rightStarSelectedLocal = rightStarSelectedSmall;
+    }
+    
+    for(var i = 0; i < starArray.length; i++)
+    {
+        var currentStar = starArray[i];
+        
+        if(star.parentNode.id == currentStar.parentNode.id)
+        {                    
+            if(!foundGroup && currentStar.className == Constants.StyleSheetClasses.StarSmall)
+            {
+                leftStarLocal = leftStarSmall;
+                rightStarLocal = rightStarSmall;
+                leftStarClearLocal = leftStarClearSmall;
+                rightStarClearLocal = rightStarClearSmall;
+                leftStarSelectedLocal = leftStarSelectedSmall;
+                rightStarSelectedLocal = rightStarSelectedSmall;
+            }
+            
+            foundGroup = true;
+            
+            if(!found)
+            {
+                if(currentStar.left)
+                {
+                    currentStar.src = leftStarSelectedLocal;
+                }
+                else
+                {
+                    currentStar.src = rightStarSelectedLocal;   
+                }
+            }
+            else
+            {
+                if(currentStar.left)
+                {
+                    currentStar.src = leftStarClearLocal;
+                }
+                else
+                {
+                    currentStar.src = rightStarClearLocal;
+                }
+            }
+            
+            if(currentStar == star)
+            {
+                found = true;
+            }
+        } 
+        else if(foundGroup)
+        {
+            break;
+        }
+    }
+}

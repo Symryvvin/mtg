@@ -1,0 +1,180 @@
+﻿function DisplayRulings(event, control, visibleText, hiddenText)
+{
+    var divs = $($(control).parentNode).select('div');
+    var node = $($(control)).select('b');
+    
+    if(divs.length > 0)
+    {
+        if(divs[0].style.display == 'block' || divs[0].style.display == '')
+        {
+            divs[0].style.display = 'none';
+            control.className = Constants.StyleSheetClasses.CollapsedNode;
+            
+            if(node.length > 0)
+            {
+                if(node[0].innerHTML == hiddenText)
+                {
+                    node[0].innerHTML = visibleText;
+                }
+                else
+                {
+                    node[0].innerHTML = hiddenText;
+                }
+            }
+        }
+        else
+        {
+            divs[0].style.display = 'block';
+            control.className = Constants.StyleSheetClasses.ExpandedNode;      
+            
+            if(node.length > 0)
+            {
+                if(node[0].innerHTML == hiddenText)
+                {
+                    node[0].innerHTML = visibleText;
+                }
+                else
+                {
+                    node[0].innerHTML = hiddenText;
+                }
+            }
+        }
+    }
+}
+
+function RotateCardImage(event, control, reset)
+{
+    if(reset)
+    {
+        $(ClientIDs.cardImage).rotate = null;
+    }
+    
+    var current = $(ClientIDs.cardImage).rotate;
+    
+    if(current == null)
+    {
+        current = 0;
+    }
+    
+    current += 90;
+    
+    var source = $(ClientIDs.cardImage).src + '&options=rotate' + current;
+    var altText = $(ClientIDs.cardImage).alt;
+    
+    $(ClientIDs.imageDivContainer).style.display = 'block';
+    
+    var image = new Element('img', { src: source, alt: altText });
+    
+    $(ClientIDs.image).update();
+    $(ClientIDs.image).insert(image);
+    $(ClientIDs.cardImage).rotate = current;
+    
+    return false;
+}
+
+function UpdateSwitcherLinks()
+{
+    var links = $$('.' + Constants.StyleSheetClasses.VariationLink);
+    
+    for(var i = 0; i < links.length; i++)
+    {
+        var link = links[i];
+        
+        if(link.id == $(ClientIDs.cardImage).multiverseID)
+        {
+            link.style.textDecoration = 'underline';
+            link.style.color = '#f02121';
+        }
+        else
+        {
+            link.style.textDecoration = 'none';
+            link.style.color = '#c5c5c5';
+        }        
+    }
+}
+
+function UpdateDetailAnchors()
+{
+    var multiverseID = $(ClientIDs.cardImage).multiverseID;
+    
+    UpdateAnchorWithNewID($(ClientIDs.DiscussionLink), multiverseID);
+    UpdateAnchorWithNewID($(ClientIDs.discussionLink), multiverseID);
+    UpdateAnchorWithNewID($(ClientIDs.LanguagesLink), multiverseID);
+    UpdateAnchorWithNewID($(ClientIDs.PrintingsLink), multiverseID);
+    UpdateAnchorWithNewID($(ClientIDs.DetailsLink), multiverseID);
+    UpdateAnchorWithNewID($('cardTextSwitchLink1'), multiverseID);
+    UpdateAnchorWithNewID($('cardTextSwitchLink2'), multiverseID);
+    UpdateAnchorWithNewID($('seeOtherSetsLink'), multiverseID);
+}
+
+function UpdateAnchorWithNewID(obj, link)
+{
+    var multiverseidstr = "multiverseid=";
+       
+    if(obj != null)
+    {
+        obj.href = obj.href.substr(0, obj.href.indexOf(multiverseidstr) + multiverseidstr.length) + link;
+    }
+}
+
+function SwitchImage(event, control, multiverseID, artist, flavor, mark, cardnumber, cardGuid, cardRating, numberOfRatings)
+{    
+    var source = imageHandler + '?type=card&multiverseid=' + multiverseID;
+    var altText = $(ClientIDs.cardImage).alt;
+    
+    var image = new Element('img', { src: source, alt: altText });
+    
+    $(ClientIDs.cardImage).src = source;
+    $(ClientIDs.cardImage).multiverseID = control.id;
+    
+    $(ClientIDs.cardImage).update();
+    $(ClientIDs.cardImage).rotate = 0;
+    if (cardnumber > 0) {
+        $(ClientIDs.CardNumberValue).update(cardnumber);
+    }
+    $(ClientIDs.ArtistCredit).update(new Element('a', {
+         href: cardSearchPage + '?action=advanced&artist=["' + artist + '"]'
+    }).update(artist));
+    
+    var flavorText = $(ClientIDs.FlavorText);
+
+    if (flavorText != null) {
+        flavorText.update(new Element('i').update(flavor.replace(/@/g, '\'').replace(/#/g, '"')));
+    }
+
+    var watermark = $(ClientIDs.Watermark);
+    if (watermark != null) {
+        watermark.update(new Element('i').update(mark.replace(/@/g, '\'').replace(/#/g, '"')));
+    }
+
+    UpdateSwitcherLinks();
+    UpdateDetailAnchors();
+    history.pushState(null, null, "/Pages/Card/Details.aspx?multiverseid=" + multiverseID);
+
+    var starContainer = $(ClientIDs.starRating);
+    var starRatingLink = starContainer.select('a')[0];
+    if (starRatingLink) {
+        var oldClassOverload = starContainer.select('a')[0].className;
+        var cardClassDetails = oldClassOverload.split(',');
+        cardClassDetails[1] = cardGuid;
+        var newClassDetails = cardClassDetails.join();
+        starContainer.select('a')[0].className = newClassDetails;
+        UpdateRelatedStarsAfterVote(starContainer, cardRating, cardRating / 2, numberOfRatings, "star");
+        var stars = $$('.' + Constants.StyleSheetClasses.Star, '.' + Constants.StyleSheetClasses.StarSmall);
+
+        for (var i = 0; i < stars.length; i++) {
+            var star = stars[i];
+            star.identifier = cardGuid;
+        }
+    } else {
+        UpdateRelatedStarsAfterVote(starContainer, cardRating, cardRating / 2, numberOfRatings, "star");
+        }
+    
+    $(ClientIDs.ratingResult).innerHTML = "";
+    return false;
+}
+
+function CloseCardViewer(event, control)
+{
+    $(ClientIDs.imageDivContainer).style.display = 'none';
+}

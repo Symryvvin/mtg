@@ -1,0 +1,25 @@
+
+// Add all popular searches in this array.
+jQuery('document').ready(function() {
+var searches = {
+    SearchArray : [{SearchName: 'Hour of Devastation', SearchUrl: 'http://gatherer.wizards.com/Pages/Search/Default.aspx?set=[%22Hour%20of%20Devastation%22]'}
+                  ,{SearchName: 'Amonkhet', SearchUrl: 'http://gatherer.wizards.com/Pages/Search/Default.aspx?set=[%22Amonkhet%22]'}
+                  ,{SearchName: 'Amonkhet Invocations', SearchUrl: 'http://gatherer.wizards.com/Pages/Search/Default.aspx?set=[%22Masterpiece%20Series:%20Amonkhet%20Invocations%22]'}
+                  ,{SearchName: 'Standard', SearchUrl: 'http://gatherer.wizards.com/Pages/Search/Default.aspx?action=advanced&format=+[%22Standard%22]'}
+                  ,{SearchName: 'Commander', SearchUrl: 'http://gatherer.wizards.com/Pages/Search/Default.aspx?action=advanced&format=+[%22Commander%22]'}
+    ]
+};
+
+// *********************************
+// Don't touch anything below here!
+// *********************************
+var output = "<style>.randombutton p { font-family: 'open_sansregular'; } </style><b class='PopularSearchText' style='font-style: open sans; color: #ffffff; font-size: 22pt; padding-bottom:0px; position:absolute; top: -51px; left: 28px'>POPULAR SEARCHES</b><ul>";
+for (i = 0; i < searches.SearchArray.length; i++)
+{
+    var currentItem = searches.SearchArray[i];
+    output +=  "<li><a href='" + currentItem.SearchUrl + "'>" + currentItem.SearchName + "</a></li>";
+}
+output += "</ul>";
+
+jQuery("#popularSearches").html(output);
+});

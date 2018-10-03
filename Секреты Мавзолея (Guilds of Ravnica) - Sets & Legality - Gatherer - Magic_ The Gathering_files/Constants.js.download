@@ -1,0 +1,48 @@
+﻿function Constants() { }
+
+Constants.StyleSheetClasses = new Object();
+Constants.Text = new Object();
+
+Constants.StyleSheetClasses.SearchBox = 'searchbox';
+Constants.StyleSheetClasses.SearchBoxFocus = 'searchboxfocus';
+Constants.StyleSheetClasses.SearchTextBox = 'searchtextbox';
+Constants.StyleSheetClasses.SearchTextBoxFocus = 'searchtextboxfocus';
+Constants.StyleSheetClasses.TextBox = 'textbox';
+Constants.StyleSheetClasses.TextBoxNew = 'textboxnew';
+Constants.StyleSheetClasses.TextBoxSmall = 'textboxsmall';
+Constants.StyleSheetClasses.TextBoxTiny = 'textboxtiny';
+Constants.StyleSheetClasses.TextBoxFocus = 'textboxfocus';
+Constants.StyleSheetClasses.TextBoxFocusSmall = 'textboxfocussmall';
+Constants.StyleSheetClasses.TextBoxFocusTiny = 'textboxfocustiny';
+Constants.StyleSheetClasses.TextBoxInput = 'textboxinput';
+Constants.StyleSheetClasses.TextBoxInputNew = 'textboxinputnew';
+Constants.StyleSheetClasses.TextBoxInputSmall = 'textboxinputsmall';
+Constants.StyleSheetClasses.TextBoxInputTiny = 'textboxinputtiny';
+Constants.StyleSheetClasses.TextArea = 'textarea';
+Constants.StyleSheetClasses.TextAreaFocus = 'textareafocus';
+Constants.StyleSheetClasses.TextAreaInput = 'textareainput';
+Constants.StyleSheetClasses.TextAreaLarge = 'textarealarge';
+Constants.StyleSheetClasses.TextAreaFocusLarge = 'textareafocuslarge';
+Constants.StyleSheetClasses.TextAreaInputLarge = 'textareainputlarge';
+Constants.StyleSheetClasses.CardResults = 'cardresults';
+Constants.StyleSheetClasses.CardLink = 'cardlink';
+Constants.StyleSheetClasses.CardDescript = 'carddescript';
+Constants.StyleSheetClasses.CardLinkHover = 'cardlinkhover';
+Constants.StyleSheetClasses.ExpandedNode = 'expandedNode';
+Constants.StyleSheetClasses.CollapsedNode = 'collapsedNode';
+Constants.StyleSheetClasses.Title = 'title';
+Constants.StyleSheetClasses.AutoCompleteTitle = 'autoCompleteTitle';
+Constants.StyleSheetClasses.Star = 'star';
+Constants.StyleSheetClasses.StarSmall = 'starSmall';
+Constants.StyleSheetClasses.StaticStar = 'staticStar';
+Constants.StyleSheetClasses.RatingStars = 'ratingStars';
+Constants.StyleSheetClasses.StarRating = 'starRating';
+Constants.StyleSheetClasses.PostForm = 'postForm';
+Constants.StyleSheetClasses.VariationLink = 'variationLink';
+Constants.StyleSheetClasses.PostEven = 'post evenItem';
+Constants.StyleSheetClasses.PostOdd = 'post oddItem';
+Constants.StyleSheetClasses.PostedByLink = 'postedByLink';
+
+
+//Constants.Text.DefaultTextBoxValue = searchBoxText;
+  

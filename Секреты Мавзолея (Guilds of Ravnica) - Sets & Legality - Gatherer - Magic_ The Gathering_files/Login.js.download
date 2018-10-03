@@ -1,0 +1,54 @@
+﻿function OnLoginCanceled() {
+    var returnUrl = getParameterByName('returnurl');
+    if (null != returnUrl) {
+        window.location = returnUrl;
+    }
+    // We don't actually care about doing anything for login canceled yet. 
+    // Let the Widget do what it needs to (close the sign in modal).
+    return true;
+}
+
+function OnLoggedIn(token) {
+    jQuery.ajax({
+        url: UtilitiesHandler,
+        method: "POST",
+        data: {
+            method: 'Login',
+            key: token
+        }
+    }).always(function() {
+        var returnUrl = getParameterByName('returnurl');
+        if (null != returnUrl) {
+            window.location = returnUrl;
+        } else {
+            window.location.reload();
+        }
+    });
+    return false;
+}
+
+function OnLoggedOut() {
+    jQuery.ajax({
+        url: UtilitiesHandler,
+        method: 'POST',
+        data: {
+            method: 'Logout'
+        }
+    }).always(function() {
+        window.location.reload();
+    });
+    // Cancel the Widget's default action of reloading the page. 
+    return false;
+}
+
+function getParameterByName(name, url) {
+    if (!url) {
+        url = window.location.href.toLowerCase();
+    }
+    name = name.replace(/[\[\]]/g, "\\$&").toLowerCase();
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
