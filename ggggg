@@ -1,683 +1,86 @@
-package ru.aizen;
+String host = "http://gatherer.wizards.com/";
+String details = "Pages/Card/Details.aspx?printed=true&multiverseid=";
+String formats = "Pages/Card/Printings.aspx?multiverseid=";
+String languages = "Pages/Card/Languages.aspx?multiverseid=";
 
-import ru.aizen.bundle.Bundle;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
-public class Main {
-    public static void main(String[] args) throws Exception {
-        Path path = Paths.get("xln_cardart_30d4a717d9249b869045a27b2d5e6779.mtga");
-        Bundle bundle = new Bundle(path);
-        bundle.unpack();
-    }
+создать базу карт связанную я языками
+
+tables
+
+CREATE TABLE card (
+	id INTEGER PRIMARY KEY,
+	name NOT NULL,
+	lang_id NOT NULL FK ON language.id,
+)
+
+CREATE TABLE card_details (
+
+)
+ 
+
+CREATE TABLE language (
+
+)
+	id
+	code
+	description
+	
+enum Language {
+	ZH-CN("Chinese Simplified", "zh_CN"),
+	ZH_TW("Chinese Traditional", "zh_TW"),
+	DE("German", "de"),
+	EN("English", "en"),
+	FR("French", "fr"),
+	IT("Italian", "it"),
+	JA("Japanese", "ja"),
+	KO("Korean", "ko"),
+	PT_BR("Portuguese (Brazil)", "pt_BR"),
+	RU("Russian", "ru"),
+	ES("Spanish", "es");
+}
+
+watermark
+
+List<Integer> idList; // заполнить от 1 до последней карты
+
+LanguageParser langParser = new LanguageParser();
+for(var i = 1; i < idList.size(); i++){
+	langParser.get(idList.get(i));
+	Map<Language, Integer> languageData = langParser.getLanguageData();
+	cardDao.insertLanguageData(languageData); // check for exist
 }
 
 
-package ru.aizen;
-
-import ru.aizen.reader.BinaryReader;
-
-public interface UnityReadable {
-
-    void read(BinaryReader reader) throws Exception;
-}
-
-package ru.aizen.reader;
-
-import ru.aizen.asset.TypeTree;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-
-public class ReadAssets {
-    public static void main(String[] args) throws Exception {
-        Path path = Paths.get("result/CAB-a040fb4f15ecab919d4f11412600f27e");
-        BinaryReader reader = new BinaryReader(Files.readAllBytes(path));
-
-        System.out.println(reader.readInt32());
-        System.out.println(reader.readInt32());
-        System.out.println(reader.readInt32());
-        int objectDataOffset = reader.readInt32();
-        System.out.println("objectDataOffset" + objectDataOffset);
-        System.out.println(reader.readBoolean());
-        reader.skip(3);
-
-        reader.littleEndian();
-        System.out.println(reader.readNullTerminatedString());
-        System.out.println("Platform: " + reader.readInt32());
-        System.out.println(reader.readBoolean());
-        var numTypes = reader.readInt32();
-        System.out.println("numTypes = " + numTypes);
-        for (var i = 0; i < numTypes; i++) {
-            System.out.println("Class ID = " + reader.readInt32());
-            System.out.println("unknown:" + reader.readInt8());
-            System.out.println("script_id" + reader.readInt16());
-            System.out.println("type hash:" + reader.readString(16));
-           TypeTree tree = new TypeTree();
-            tree.read(reader);
-        }
-        int oInfo = reader.readInt32();
-        System.out.println("numObjectInfo: " + oInfo);
-
-        for(int j = 0; j < oInfo; j++){
-            int oldPosition = reader.position();
-            int newPosition = (oldPosition + 3) & -4;
-            if (newPosition > oldPosition){
-                reader.position(newPosition);
-            }
-            System.out.println("objectID = " + reader.readInt64());
-            int dataOffset = reader.readInt32() + objectDataOffset;
-            System.out.println("dataOffset = " + dataOffset);
-            System.out.println("dataSize = " + reader.readInt32());
-            System.out.println("typeIndex = " + reader.readInt32());
-        }
-        System.out.println(reader.position());
-        int oldPosition = reader.position();
-        int newPosition = (oldPosition + 3) & -4;
-        if (newPosition > oldPosition){
-            reader.position(newPosition);
-        }
-        System.out.println(reader.position());
-       // System.out.println(Arrays.toString(reader.getByteReaderForBytes(1000).byteArray()));
-/*
-        System.out.println(reader.position());
-        int numAdds = reader.readInt32();
-        System.out.println("NUMBER ADDS = " + numAdds);
-        for(int k = 0; k < numAdds; k++){
-            System.out.println("fileID = " + reader.readInt32());
-            int oldPosition = reader.position();
-            int newPosition = (oldPosition + 3) & -4;
-            if (newPosition > oldPosition){
-                reader.position(newPosition);
-            }
-        }*/
-        reader.position(42296);
-        int numExternalFiles = reader.readInt32();
-        System.out.println("numExternalFiles = " + numExternalFiles);
-        for(int l = 0; l < numExternalFiles; l++){
-            System.out.println("type = " + reader.readInt32());
-            System.out.println(reader.readNullTerminatedString());
-            System.out.println(reader.readInt32());
-            System.out.println(reader.readInt32());
-            System.out.println(reader.readInt32());
-            System.out.println(reader.readInt64());
-        }
-
-        System.out.println(reader.position());
-        System.out.println(Arrays.toString(reader.getByteReaderForBytes(10).byteArray()));
-
-
-    }
-}
-
-package ru.aizen.reader;
-
-import ru.aizen.bundle.BundleEntry;
-import ru.aizen.bundle.BundleHeader;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class BundleReader {
-    private BinaryReader reader;
-
-    public BundleReader(byte[] data) {
-        this.reader = new BinaryReader(data);
-    }
-
-    public BundleHeader readHeader() throws Exception {
-        var header = new BundleHeader();
-        header.read(reader);
-        return header;
-    }
-
-    public List<BundleEntry> entries(BundleHeader header) {
-        List<BundleEntry> entries = new ArrayList<>();
-        var reader = header.decompress();
-        reader.skip(16);
-        readStorageBlocks(reader);
-        var count = reader.readInt32();
-        for (var i = 0; i < count; i++) {
-            var entry = new BundleEntry();
-            entry.read(reader);
-            entries.add(entry);
-        }
-        return entries;
-    }
-
-    public void setBundleEntryData(int offset, BundleEntry entry){
-        reader.position(offset);
-        entry.setData(reader.readByteArray(entry.getSize()));
-    }
-
-    private void readStorageBlocks(BinaryReader reader) {
-        var storageBlocks = reader.readInt32();
-        for (var i = 0; i < storageBlocks; ++i) {
-            reader.readInt32();
-            reader.readInt32();
-            reader.readInt16();
-        }
-    }
-}
-
-package ru.aizen.reader;
-
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-
-public class BinaryReader {
-    private ByteBuffer byteBuffer;
-
-    public BinaryReader(byte[] bytes) {
-        byteBuffer = ByteBuffer.wrap(bytes);
-    }
-
-    public void bigEndian() {
-        byteBuffer.order(ByteOrder.BIG_ENDIAN);
-    }
-
-    public void littleEndian() {
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    }
-
-
-    public boolean readBoolean() throws IOException {
-        byte b = byteBuffer.get();
-        if (b == 0x00)
-            return false;
-        if (b == 0x01)
-            return true;
-        else {
-            throw new IOException("Value [" + b + "] cannot be converted into boolean type");
-        }
-    }
-
-    public Integer readInt32() {
-        return byteBuffer.getInt();
-    }
-
-    public Integer readUInt32() {
-        return byteBuffer.getInt() & 0x7FFFFFFF;
-    }
-
-    public Long readInt64() {
-        return byteBuffer.getLong();
-    }
-
-    public Short readInt16() {
-        return byteBuffer.getShort();
-    }
-
-    public Byte readInt8() {
-        return byteBuffer.get();
-    }
-
-    public byte[] readByteArray(long length) {
-        byte[] result = new byte[(int) length];
-        byteBuffer.get(result);
-        return result;
-    }
-
-    public String readString(int length) {
-        return new String(readByteArray(length));
-    }
-
-    public String readNullTerminatedString(int length, Charset charset) {
-        byte[] bytes = new byte[length];
-        int index;
-        for (index = 0; index < length; index++) {
-            byte b = readInt8();
-            if (isNullTerminator(b)) {
-                break;
-            } else {
-                bytes[index] = b;
-            }
-        }
-        return new String(bytes, 0, index, charset);
-    }
-
-    private boolean isNullTerminator(byte b) {
-        return b == 0;
-    }
-
-    public String readNullTerminatedString() {
-        return readNullTerminatedString(256, StandardCharsets.US_ASCII);
-    }
-
-    public void skip(int amount) {
-        byteBuffer.position(byteBuffer.position() + amount);
-    }
-
-    public BinaryReader getByteReaderForBytes(int size) {
-        return new BinaryReader(readByteArray(size));
-    }
-
-    public int position() {
-        return byteBuffer.position();
-    }
-
-    public void position(int position) {
-        byteBuffer.position(position);
-    }
-
-    public byte[] byteArray() {
-        return byteBuffer.array();
-    }
-}
-
-package ru.aizen.bundle;
-
-import java.util.Arrays;
-
-public enum Signature {
-    UNITY_FS("UnityFS");
-
-    private String value;
-
-    Signature(String value) {
-        this.value = value;
-    }
-
-    public static Signature get(String value) throws Exception {
-        var result =Arrays.stream(Signature.values()).filter(s -> value.equals(s.value)).findFirst();
-        if (result.isPresent()){
-            return result.get();
-        } else
-            throw new Exception("Not supported file format");
-    }
-}
-
-package ru.aizen.bundle;
-
-import net.jpountz.lz4.LZ4Factory;
-import net.jpountz.lz4.LZ4FastDecompressor;
-import ru.aizen.reader.BinaryReader;
-
-public class BundleHeader {
-    private Signature signature;
-    private int version;
-    private String unityVersion;
-    private String unityRevision;
-    private long totalSize;
-    private int headerSize;
-
-    private int headerDataSizeCompressed;
-    private int headerDataSizeDecompressed;
-    private int compressionScheme;
-
-    private byte[] compressedData;
-
-    public void read(BinaryReader reader) throws Exception {
-        signature = Signature.get(reader.readNullTerminatedString());
-        version = reader.readInt32();
-        unityVersion = reader.readNullTerminatedString();
-        unityRevision = reader.readNullTerminatedString();
-        totalSize = reader.readInt64();
-        headerDataSizeCompressed = reader.readInt32();
-        headerDataSizeDecompressed = reader.readInt32();
-        var flags = reader.readInt32();
-        headerSize = reader.position() + (hasCompressedHeaderData(flags) ? headerDataSizeCompressed : 0);
-        compressionScheme = flags & 0x3f;
-        compressedData = reader.readByteArray(headerDataSizeCompressed);
-    }
-
-    public BinaryReader decompress() {
-        var restored = new byte[headerDataSizeDecompressed];
-        LZ4FastDecompressor decompressor = LZ4Factory.fastestInstance().fastDecompressor();
-        decompressor.decompress(compressedData, 0, restored, 0, headerDataSizeDecompressed);
-        return new BinaryReader(restored);
-    }
-
-    private boolean hasCompressedHeaderData(int flags) {
-        return (flags & 0x80) == 0;
-    }
-
-    public Signature getSignature() {
-        return signature;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public String getUnityVersion() {
-        return unityVersion;
-    }
-
-    public String getUnityRevision() {
-        return unityRevision;
-    }
-
-    public long getTotalSize() {
-        return totalSize;
-    }
-
-    public int getHeaderDataSizeCompressed() {
-        return headerDataSizeCompressed;
-    }
-
-    public int getHeaderDataSizeDecompressed() {
-        return headerDataSizeDecompressed;
-    }
-
-    public int getCompressionScheme() {
-        return compressionScheme;
-    }
-
-    public int getHeaderSize() {
-        return headerSize;
-    }
-
-    public byte[] getCompressedData() {
-        return compressedData;
-    }
-
-    @Override
-    public String toString() {
-        return "Signature='" + signature + '\'' +
-                ", Version=" + version +
-                ", Unity Version='" + unityVersion + '\'' +
-                ", Unity Revision='" + unityRevision + '\'' +
-                ", Total Size=" + totalSize +
-                ", HeaderData Size Compressed=" + headerDataSizeCompressed +
-                ", HeaderData Size Decompressed=" + headerDataSizeDecompressed +
-                ", Compression Scheme=" + compressionScheme +
-                ", Header Size=" + headerSize;
-    }
+Parser parser = new Parser();
+for(var i = 1; i < idList.size(); i++){
+	int id = idList.get(i)
+	if (skipIdList.contains(id)
+		continue;
+	
+	vat idForParse = getIdMapForAllLanguages(id);
+	// go to languages, get map of <Lang, Id>
+	
+	
+	parser.parse(idList.get(i));
+	...
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	skipIdList.add(id);
 }
 
 
-package ru.aizen.bundle;
 
-import ru.aizen.reader.BinaryReader;
-
-public class BundleEntry {
-    private long offset;
-    private long size;
-    private int flags;
-    private String name;
-
-    private byte[] data;
-
-    public void read(BinaryReader reader) {
-        offset = reader.readInt64();
-        size = reader.readInt64();
-        flags = reader.readInt32();
-        name = reader.readNullTerminatedString();
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public long getOffset() {
-        return offset;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public int getFlags() {
-        return flags;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return "DataEntry{" +
-                "offset=" + offset +
-                ", size=" + size +
-                ", flags=" + flags +
-                ", name='" + name + '\'' +
-                '}';
-    }
-
-
-}
-
-package ru.aizen.bundle;
-
-import ru.aizen.reader.BundleReader;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.List;
-
-public class Bundle {
-    private BundleReader reader;
-    private BundleHeader header;
-    private List<BundleEntry> entries;
-
-    public Bundle(Path path) throws IOException {
-        this.reader = new BundleReader(Files.readAllBytes(path));
-    }
-
-    public void unpack() throws Exception {
-        header = reader.readHeader();
-        System.out.println(header);
-        entries = reader.entries(header);
-        System.out.println(entries);
-        entries.forEach(e -> reader.setBundleEntryData(header.getHeaderSize(), e));
-        entries.forEach(e -> {
-                try {
-                    Files.write(Paths.get("result").resolve(e.getName()), e.getData(), StandardOpenOption.CREATE);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            });
-    }
-
-    public BundleHeader header() {
-        return header;
-    }
-
-    public List<BundleEntry> entries() {
-        return entries;
-    }
-
-}
-
-package ru.aizen.asset;
-
-import ru.aizen.UnityReadable;
-import ru.aizen.reader.BinaryReader;
-
-public class TypeTreeNode implements UnityReadable {
-    private int stringBufferSize;
-    private String stringBuffer;
-
-    private int version;
-    private int depth;
-    private boolean isArray;
-    private String type;
-    private String name;
-    private int size;
-    private int index;
-    private int flags;
-
-    private byte[] strings;
-
-    public TypeTreeNode(int stringBufferSize, String stringBuffer) {
-        this.stringBufferSize = stringBufferSize;
-        this.stringBuffer = stringBuffer;
-    }
-
-    @Override
-    public void read(BinaryReader reader) throws Exception {
-        strings = getClass().getResourceAsStream("/strings.dat").readAllBytes();
-        version = reader.readInt16();
-        depth = reader.readInt8();
-        isArray = reader.readBoolean();
-        type = getStringValue(reader.readInt32());
-        name = getStringValue(reader.readInt32());
-        size = reader.readInt32();
-        index = reader.readInt32();
-        flags = reader.readInt32();
-    }
-
-    private String getStringValue(int i) {
-        if (i < 0) {
-            i &= 0x7fffffff;
-            BinaryReader buffer = new BinaryReader(strings);
-            buffer.position(i);
-            return buffer.readNullTerminatedString();
-        } else if (i < stringBufferSize) {
-            BinaryReader buffer = new BinaryReader(stringBuffer.getBytes());
-            buffer.position(i);
-            return buffer.readNullTerminatedString();
-        }
-        return null;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public int getDepth() {
-        return depth;
-    }
-
-    public boolean isArray() {
-        return isArray;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public int getFlags() {
-        return flags;
-    }
-
-    @Override
-    public String toString() {
-        return "TypeTreeNode{" +
-                "version=" + version +
-                ", depth=" + depth +
-                ", isArray=" + isArray +
-                ", type=" + type +
-                ", name=" + name +
-                ", size=" + size +
-                ", index=" + index +
-                ", flags=" + flags +
-                '}';
-    }
-}
-
-package ru.aizen.asset;
-
-import ru.aizen.UnityReadable;
-import ru.aizen.reader.BinaryReader;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class TypeTree implements UnityReadable {
-    private List<TypeTreeNode> nodes;
-    private int stringBufferSize;
-    private String buffer;
-
-    @Override
-    public void read(BinaryReader reader) throws Exception {
-        var nodeCount = reader.readInt32();
-        nodes = new ArrayList<>();
-        stringBufferSize = reader.readInt32();
-        BinaryReader nodesData = reader.getByteReaderForBytes(24 * nodeCount);
-        nodesData.littleEndian();
-        buffer = reader.readString(stringBufferSize);
-        readNodes(nodesData, nodeCount);
-
-    }
-
-    private void readNodes(BinaryReader reader, int count) throws Exception {
-        for (var i = 0; i < count; i++) {
-            var node = new TypeTreeNode(stringBufferSize, buffer);
-            node.read(reader);
-            nodes.add(node);
-        }
-    }
-
-    public List<TypeTreeNode> getNodes() {
-        return nodes;
-    }
-
-    public String getBuffer() {
-        return buffer;
-    }
-
-    @Override
-    public String toString() {
-        return "TypeTree{" +
-                "nodes=" + nodes +
-                ", buffer='" + buffer + '\'' +
-                '}';
-    }
-}
-
-
-package ru.aizen.asset;
-
-import ru.aizen.UnityReadable;
-import ru.aizen.reader.BinaryReader;
-
-public class SerializedAssetHeader implements UnityReadable {
-    private int metaDataSize;
-    private int totalSize;
-    private int version;
-    private int objectDataOffset;
-    private boolean isBigEndian;
-
-    public SerializedAssetHeader() {
-    }
-
-    @Override
-    public void read(BinaryReader reader) throws Exception {
-        metaDataSize = reader.readInt32();
-        totalSize = reader.readInt32();
-        version = reader.readInt32();
-        objectDataOffset = reader.readInt32();
-        isBigEndian = reader.readBoolean();
-        reader.skip(3);
-        if (!isBigEndian){
-            reader.littleEndian();
-        }
-    }
-}
-
-package ru.aizen.asset;
-
-public class SerializedAsset {
-
-}
-
-AABB AnimationClip AnimationCurve AnimationState Array Base BitField bitset bool char ColorRGBA Component data deque double dynamic_array FastPropertyName first float Font GameObject Generic Mono GradientNEW GUID GUIStyle int list long long map Matrix4x4f MdFour MonoBehaviour MonoScript m_ByteSize m_Curve m_EditorClassIdentifier m_EditorHideFlags m_Enabled m_ExtensionPtr m_GameObject m_Index m_IsArray m_IsStatic m_MetaFlag m_Name m_ObjectHideFlags m_PrefabInternal m_PrefabParentObject m_Script m_StaticEditorFlags m_Type m_Version Object pair PPtr<Component> PPtr<GameObject> PPtr<Material> PPtr<MonoBehaviour> PPtr<MonoScript> PPtr<Object> PPtr<Prefab> PPtr<Sprite> PPtr<TextAsset> PPtr<Texture> PPtr<Texture2D> PPtr<Transform> Prefab Quaternionf Rectf RectInt RectOffset second set short size SInt16 SInt32 SInt64 SInt8 staticvector string TextAsset TextMesh Texture Texture2D Transform TypelessData UInt16 UInt32 UInt64 UInt8 unsigned int unsigned long long unsigned short vector Vector2f Vector3f Vector4f m_ScitorClassIdentifierriptingClassIdentifier 
+cards
+ --set.aplha
+	--card-.json
+	--img
+		--card-.png
