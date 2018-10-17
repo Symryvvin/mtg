@@ -1,0 +1,318 @@
+https://www.journaldev.com/1997/servlet-jdbc-database-connection-example
+
+https://v4-alpha.getbootstrap.com/utilities/display-property/
+
+https://viralpatel.net/blogs/tutorial-create-autocomplete-feature-with-java-jsp-jquery/
+
+
+package ru.aizen.dao;
+
+import ru.aizen.wizard.Language;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+public class WizardsDao {
+    private Connection connection;
+
+    public WizardsDao(Connection connection) {
+        this.connection = connection;
+    }
+
+    public String getLanguages() throws SQLException {
+        var result = new ArrayList<Language>();
+        String sql = "SELECT * FROM language";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+               result.add(new Language(rs.getInt(1), rs.getString(2), rs.getString(3), ""));
+            }
+        }
+        return result.stream()
+                .map(Language::toString).reduce("", (a, b) -> a + b + ";");
+    }
+}
+
+package ru.aizen.servlet.listeners;
+
+import ru.aizen.dao.WizardsDao;
+import ru.aizen.util.ConnectionManager;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+@WebListener
+public class ContextListener implements ServletContextListener {
+
+    @Override
+    public void contextInitialized(ServletContextEvent event) {
+        ServletContext context = event.getServletContext();
+        try {
+            ConnectionManager connectionManager = new ConnectionManager();
+            context.setAttribute("Wizards", new WizardsDao(connectionManager.getConnection()));
+            System.out.println("DB Connection initialized successfully.");
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent event) {
+        Connection connection = (Connection) event.getServletContext().getAttribute("Wizards");
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+package ru.aizen.util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class ConnectionManager {
+    private Connection connection;
+
+    public ConnectionManager() throws ClassNotFoundException, SQLException {
+        Class.forName("org.sqlite.JDBC");
+        this.connection = DriverManager.getConnection("jdbc:sqlite::resource:wizards.db", "", "");
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+}
+
+package ru.aizen.wizard;
+
+public class Language {
+    private int id;
+    private String code;
+    private String description;
+    private String country;
+    private String flagUrl;
+
+    public Language(int id, String code, String description, String country) {
+        this.id = id;
+        this.code = code;
+        this.description = description;
+        this.country = country;
+    }
+
+    @Override
+    public String toString() {
+        return "Language{" +
+                "id=" + id +
+                ", code='" + code + '\'' +
+                ", description='" + description + '\'' +
+                ", country='" + country + '\'' +
+                ", flagUrl='" + flagUrl + '\'' +
+                '}';
+    }
+}
+
+
+<%@page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8"%>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Заголовок</title>
+		<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+	</head>
+	<body>
+		<div id="main">
+		<jsp:include page="/language" flush="true" />
+			<div class="card">
+				<div class="card-header info-color white-text text-center">Проверка</div>
+				<div class="card-body">
+					<form action="check.jsp">
+						<div>
+							<input type="text" id="name" class="form-control">
+								<label for="name">Наименование</label>
+								<small class="form-text text-muted mb-4">на русском или английском языке</small>
+							</div>
+							<div class="form-row">
+								<div class="col">
+								  <div class="dropdown">
+									<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+									  Dropdown button
+									</button>
+${name}
+								  </div>
+								</div>
+								<div class="col">
+									<div>
+										<input type="test" id="number" class="form-control"/>
+										<label for="number">Номер</label>
+									</div>
+								</div>
+							</div>
+							<button type="submit" class="btn btn-primary">Поиск</button>
+						</form>
+					</div>
+				<div class="card-footer">Подвал</div>
+			</div>
+		</div>
+	</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Языки</title>
+		<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+	</head>
+	<body>
+		<div id="main">
+		    <img src="../../../flags/russia.png" class="d-inline-block"/>
+		    <img src="../../../flags/china.png" class="d-inline-block"/>
+		    <img src="../../../flags/united-kingdom.png" class="d-inline-block"/>
+		    <img src="../../../flags/italy.png" class="d-inline-block"/>
+		    <img src="../../../flags/germany.png" class="d-inline-block"/>
+		    <img src="../../../flags/south-korea.png" class="d-inline-block"/>
+		    <img src="../../../flags/spain.png" class="d-inline-block"/>
+		    <img src="../../../flags/japan.png" class="d-inline-block"/>
+		    <img src="../../../flags/france.png" class="d-inline-block"/>
+		    <img src="../../../flags/brazil.png" class="d-inline-block"/>
+		</div>
+	</body>
+</html
+
+package ru.aizen;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+
+@WebServlet("/ExampleServlet")
+public class ExampleServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        String dropdown = "" +
+                "<div class=\"dropdown-menu\">" +
+                "<a class=\"dropdown-item\" href=\"#\">Link 1213213</a>" +
+                "<a class=\"dropdown-item\" href=\"#\">Link 2312313</a>" +
+                "<a class=\"dropdown-item\" href=\"#\">Link 14214143</a>" +
+                "</div>";
+
+        req.setAttribute("name", dropdown);
+
+        req.getRequestDispatcher("/index.jsp").forward(req, resp);
+    }
+}
+
+package ru.aizen.servlet;
+
+import ru.aizen.dao.WizardsDao;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+@WebServlet("/language")
+public class LanguageServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        WizardsDao dao = (WizardsDao) getServletContext().getAttribute("Wizards");
+        try {
+            req.setAttribute("languages", dao.getLanguages());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        req.getRequestDispatcher("/languages.jsp").include(req, resp);
+    }
+}
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ru.aizen</groupId>
+    <artifactId>ExampleServlet</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.21.0.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>ExampleServlet</finalName>
+    </build>
+
+</project>
+
+CREATE TABLE language (
+	id INT,
+	code VARCHAR(5) NOT NULL,
+	description VARCHAR(30) NOT NULL
+);
+
+BEGIN;
+INSERT INTO language (id, code, description) VALUES (1, 'en', 'English');
+INSERT INTO language (id, code, description) VALUES (2, 'ru', 'Russian');
+INSERT INTO language (id, code, description) VALUES (3, 'de', 'German');
+INSERT INTO language (id, code, description) VALUES (4, 'fr', 'French');
+INSERT INTO language (id, code, description) VALUES (5, 'it', 'Italian');
+INSERT INTO language (id, code, description) VALUES (6, 'es', 'Spanish');
+INSERT INTO language (id, code, description) VALUES (7, 'pt_br', 'Portuguese (Brazil)');
+INSERT INTO language (id, code, description) VALUES (8, 'ja', 'Japanese');
+INSERT INTO language (id, code, description) VALUES (9, 'ko', 'Korean');
+INSERT INTO language (id, code, description) VALUES (10, 'zh_cn', 'Chinese Simplified');
+INSERT INTO language (id, code, description) VALUES (11,'zh_tw', 'Chinese Traditional');
+COMMIT;
+
+
