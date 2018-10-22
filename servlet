@@ -521,3 +521,104 @@ public class ThreadTest {
         }
     }
 }
+
+package ru.aizen.servlet;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ru.aizen.dao.WizardsDao;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+@WebServlet("/search")
+public class SearchByNameServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        WizardsDao dao = (WizardsDao) getServletContext().getAttribute("Wizards");
+
+        String prefix = req.getParameter("term");
+        resp.setCharacterEncoding("UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            PrintWriter writer = resp.getWriter();
+
+            writer.print(mapper.writeValueAsString(dao.getCardByNamePrefix(prefix)));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+<%@page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8"%>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Заголовок</title>
+		<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+		<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+        <script src="jquery-1.12.4.js"></script>
+        <script src="jquery-ui.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+		<script>
+		  $(function() {
+			 $("#searchName").autocomplete({
+				source: "search",
+				focus: function(event, ui) {
+				$("#searchName").val(ui.item.value);
+        			return false;
+				},
+				select: function(event, ui) {
+
+				}
+			 });
+		  });
+
+  </script>
+	</script>
+	</head>
+	<body>
+		<div id="main">
+			<div class="card">
+				<div class="card-header info-color white-text text-center">Проверка</div>
+				<div class="card-body">
+					<form action="check.jsp">
+						<div>
+							<input type="text" id="searchName" class="form-control">
+							<label for="searchName">Наименование</label>
+							<small class="form-text text-muted mb-4">на русском или английском языке</small>
+						</div>
+						<div class="form-row">
+						    <div class="col">
+						        <div class="dropdown">
+								    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+									     Dropdown button
+									</button>
+								 </div>
+							</div>
+						    <div class="col">
+							    <div>
+									<input type="test" id="number" class="form-control"/>
+									<label for="number">Номер</label>
+								</div>
+							</div>
+						</div>
+						<button type="submit" class="btn btn-primary">Поиск</button>
+					</form>
+				</div>
+				<div class="card-footer">Подвал</div>
+			</div>
+		</div>
+	</body>
+</html>
