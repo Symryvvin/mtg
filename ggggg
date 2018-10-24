@@ -1,86 +1,73 @@
-String host = "http://gatherer.wizards.com/";
-String details = "Pages/Card/Details.aspx?printed=true&multiverseid=";
-String formats = "Pages/Card/Printings.aspx?multiverseid=";
-String languages = "Pages/Card/Languages.aspx?multiverseid=";
+setx JAVA_HOME E:\dev\java\jdk-11\
+setx SQLITE_HOME E:\dev\sqlite\
+setx MYSQL_HOME E:\dev\mysql\
+setx CATALINA_HOME E:\dev\tomcat\
 
 
+DROP TABLE IF EXISTS card;
+DROP TABLE IF EXISTS lang;
 
-создать базу карт связанную я языками
+CREATE TABLE IF NOT EXISTS card (
+  id        INT,
+  name      VARCHAR(50) NOT NULL,
+  lang_code VARCHAR(5) NOT NULL,
+  upper_name VARCHAR(50)
+);
 
-tables
+CREATE INDEX multi_verse_id  ON card (id);
+CREATE INDEX card_name ON card (upper_name);
+CREATE INDEX language_code ON card (lang_code);
 
-CREATE TABLE card (
-	id INTEGER PRIMARY KEY,
-	name NOT NULL,
-	lang_id NOT NULL FK ON language.id,
-)
+CREATE TABLE IF NOT EXISTS lang (
+  code        VARCHAR(5)  NOT NULL,
+  description VARCHAR(30) NOT NULL
+);
 
-CREATE TABLE card_details (
+BEGIN;
+INSERT INTO lang (code, description)
+VALUES ('en', 'English');
+INSERT INTO lang (code, description)
+VALUES ('ru', 'Russian');
+INSERT INTO lang (code, description)
+VALUES ('de', 'German');
+INSERT INTO lang (code, description)
+VALUES ('fr', 'French');
+INSERT INTO lang (code, description)
+VALUES ('it', 'Italian');
+INSERT INTO lang (code, description)
+VALUES ('es', 'Spanish');
+INSERT INTO lang (code, description)
+VALUES ('pt_br', 'Portuguese (Brazil)');
+INSERT INTO lang (code, description)
+VALUES ('ja', 'Japanese');
+INSERT INTO lang (code, description)
+VALUES ('ko', 'Korean');
+INSERT INTO lang (code, description)
+VALUES ('zh_cn', 'Chinese Simplified');
+INSERT INTO lang (code, description)
+VALUES ('zh_tw', 'Chinese Traditional');
+COMMIT;
 
-)
- 
-
-CREATE TABLE language (
-
-)
-	id
-	code
-	description
-	
-enum Language {
-	ZH-CN("Chinese Simplified", "zh_CN"),
-	ZH_TW("Chinese Traditional", "zh_TW"),
-	DE("German", "de"),
-	EN("English", "en"),
-	FR("French", "fr"),
-	IT("Italian", "it"),
-	JA("Japanese", "ja"),
-	KO("Korean", "ko"),
-	PT_BR("Portuguese (Brazil)", "pt_BR"),
-	RU("Russian", "ru"),
-	ES("Spanish", "es");
-}
-
-watermark
-
-List<Integer> idList; // заполнить от 1 до последней карты
-
-LanguageParser langParser = new LanguageParser();
-for(var i = 1; i < idList.size(); i++){
-	langParser.get(idList.get(i));
-	Map<Language, Integer> languageData = langParser.getLanguageData();
-	cardDao.insertLanguageData(languageData); // check for exist
-}
+mysql -u root  -p --default_character_set=utf8mb4 magic < c.sql
 
 
-Parser parser = new Parser();
-for(var i = 1; i < idList.size(); i++){
-	int id = idList.get(i)
-	if (skipIdList.contains(id)
-		continue;
-	
-	vat idForParse = getIdMapForAllLanguages(id);
-	// go to languages, get map of <Lang, Id>
-	
-	
-	parser.parse(idList.get(i));
-	...
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	skipIdList.add(id);
-}
+распаковать msql.zip
+
+[mysqld]
+# set basedir to your installation path
+basedir=E:/dev/mysql
+# set datadir to the location of your data directory
+datadir=E:/dev/mysql/data
+default-time-zone='+00:00'
+character-set-server=utf8mb4
+collation-server=utf8mb4_general_ci
+
+в корень
+
+start mysqld --console? как сервис?
+
+stop
+
+mysqladmin -u root -p shutdown
 
 
-
-cards
- --set.aplha
-	--card-.json
-	--img
-		--card-.png
