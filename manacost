@@ -1,0 +1,264 @@
+package ru.aizen.card;
+
+public class Mana {
+    private int cost;
+    private String value;
+    private String name;
+    private Color color;
+
+    public static Mana from(String name){
+        Mana mana = ManaPool.pool.get(name);
+        if (mana == null) {
+            mana = new Mana(name);
+        }
+        return mana;
+    }
+
+    public Mana(int cost, String value, String name, Color color) {
+        this.cost = cost;
+        this.value = value;
+        this.name = name;
+        this.color = color;
+    }
+
+    public Mana(String name){
+        this.name = name;
+      //  value = manaBase.get(name);
+        cost = extractCostValue();
+        color = Color.COLORLESS;
+    }
+
+    private int extractCostValue() {
+        String regex = "\\d+";
+        if (name.matches(regex)){
+            value = "{" + name + "}";
+            return Integer.parseInt(name);
+        }
+        if (name.equals("X") || name.equals("Y")) {
+            return 0;
+        }
+        return 1;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public boolean isColored(){
+        return color != Color.COLORLESS;
+    }
+
+    @Override
+    public String toString() {
+        return "Mana{" +
+                "cost=" + cost +
+                ", value='" + value + '\'' +
+                ", name='" + name + '\'' +
+                ", color=" + color +
+                '}';
+    }
+}
+
+package ru.aizen.card;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ManaPool {
+    public static final String X = "X";
+    public static final String Y = "Y";
+    public static final String WHITE = "White";
+    public static final String BLUE = "Blue";
+    public static final String BLACK = "Black";
+    public static final String RED = "Red";
+    public static final String GREEN = "Green";
+    public static final String COLORLESS = "Colorless";
+    public static final String PHYREXIA_WHITE = "Phyrexia White";
+    public static final String PHYREXIA_BLUE = "Phyrexia Blue";
+    public static final String PHYREXIA_BLACK = "Phyrexia Black";
+    public static final String PHYREXIA_RED = "Phyrexia Red";
+    public static final String PHYREXIA_GREEN = "Phyrexia Green";
+    public static final String WHITE_BLUE = "White|Blue";
+    public static final String WHITE_BLACK = "White|Black";
+    public static final String RED_WHITE = "Red|White";
+    public static final String GREEN_WHITE = "Green|White";
+    public static final String RED_GREEN = "Red|Green";
+    public static final String BLUE_RED = "Blue|Red";
+    public static final String BLUE_BLACK = "Blue|Black";
+    public static final String BLACK_RED = "Black|Red";
+    public static final String BLACK_GREEN = "Black|Green";
+    public static final String GREEN_BLUE = "Green|Blue";
+    public static final Map<String, Mana> pool;
+
+    static {
+        pool = new HashMap<>();
+        pool.put(X, new Mana(0, "{X}", X, Color.COLORLESS));
+        pool.put(Y, new Mana(0, "{Y}", Y, Color.COLORLESS));
+        pool.put(WHITE, new Mana(1, "{W}", WHITE, Color.WHITE));
+        pool.put(BLUE, new Mana(1, "{U}", BLUE, Color.BLUE));
+        pool.put(BLACK, new Mana(1, "{B}", BLACK, Color.BLACK));
+        pool.put(RED, new Mana(1, "{R}", RED, Color.RED));
+        pool.put(GREEN, new Mana(1, "{G}", GREEN, Color.GREEN));
+        pool.put(COLORLESS, new Mana(1, "{C}", COLORLESS, Color.COLORLESS));
+        pool.put(PHYREXIA_WHITE, new Mana(1, "{WP}", PHYREXIA_WHITE, Color.WHITE));
+        pool.put(PHYREXIA_BLUE, new Mana(1, "{UP}", PHYREXIA_BLUE, Color.BLUE));
+        pool.put(PHYREXIA_BLACK, new Mana(1, "{BP}", PHYREXIA_BLACK, Color.BLACK));
+        pool.put(PHYREXIA_RED, new Mana(1, "{RP}", PHYREXIA_RED, Color.RED));
+        pool.put(PHYREXIA_GREEN, new Mana(1, "{GP}", PHYREXIA_GREEN, Color.GREEN));
+        pool.put(WHITE_BLUE, new Mana(1, "{WU}", WHITE_BLUE, Color.MULTICOLOR));
+        pool.put(WHITE_BLACK, new Mana(1, "{WB}", WHITE_BLACK, Color.MULTICOLOR));
+        pool.put(RED_WHITE, new Mana(1, "{RW}", RED_WHITE, Color.MULTICOLOR));
+        pool.put(GREEN_WHITE, new Mana(1, "{GW}", GREEN_WHITE, Color.MULTICOLOR));
+        pool.put(RED_GREEN, new Mana(1, "{RG}", RED_GREEN, Color.MULTICOLOR));
+        pool.put(BLUE_RED, new Mana(1, "{UR}", BLUE_RED, Color.MULTICOLOR));
+        pool.put(BLUE_BLACK, new Mana(1, "{UB}", BLUE_BLACK, Color.MULTICOLOR));
+        pool.put(BLACK_RED, new Mana(1, "{BR}", BLACK_RED, Color.MULTICOLOR));
+        pool.put(BLACK_GREEN, new Mana(1, "{BG}", BLACK_GREEN, Color.MULTICOLOR));
+        pool.put(GREEN_BLUE, new Mana(1, "{GB}", GREEN_BLUE, Color.MULTICOLOR));
+    }
+}
+
+package ru.aizen.card;
+
+public enum Color {
+    WHITE,
+    BLUE,
+    BLACK,
+    RED,
+    GREEN,
+    MULTICOLOR,
+    COLORLESS,
+    LAND
+}
+
+package ru.aizen.card;
+
+
+
+public class Card {
+    private String name;
+    private ManaCost manaCost;
+    //private SuperType[] superTypes;
+    //private SubType[] subTypes;
+   // private Description description;
+
+
+
+    private boolean doubleFaces;
+    private Card transformed;
+
+    public Card getTransformed() throws Exception {
+        if (doubleFaces)
+            return transformed;
+        else {
+            throw new Exception("Card with id is not double-faced");
+        }
+    }
+
+
+}
+
+package ru.aizen.card;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class ManaCost {
+    private List<Mana> cost;
+
+    public ManaCost() {
+        cost = new ArrayList<>();
+    }
+
+    public void addMana(Mana mana){
+        cost.add(mana);
+    }
+
+    public List<Mana> getMana() {
+        return cost;
+    }
+
+    public String getCost() {
+        return cost.stream()
+                .map(Mana::getValue)
+                .reduce("" ,(x, y) -> x + y);
+    }
+
+    public int getConvertedManaCost() {
+        return cost.stream()
+                .mapToInt(Mana::getCost)
+                .sum();
+    }
+
+    public Color getColor() {
+        Color color = null;
+        if (cost.isEmpty()){
+            color = Color.LAND;
+        }
+        if (cost.stream().allMatch(m -> m.getColor() == Color.COLORLESS)){
+            color = Color.COLORLESS;
+        }
+        List<Mana> coloredMana = cost.stream()
+                .filter(Mana::isColored)
+                .collect(Collectors.toList());
+        System.out.println(coloredMana);
+        if (!coloredMana.isEmpty()){
+            if (coloredMana.stream().allMatch(m -> m.getColor() == Color.WHITE)){
+                color = Color.WHITE;
+            } else if (coloredMana.stream().allMatch(m -> m.getColor() == Color.BLUE)){
+                color = Color.BLUE;
+            } else if (coloredMana.stream().allMatch(m -> m.getColor() == Color.BLACK)){
+                color = Color.BLACK;
+            } else if (coloredMana.stream().allMatch(m -> m.getColor() == Color.RED)){
+                color = Color.RED;
+            } else if (coloredMana.stream().allMatch(m -> m.getColor() == Color.GREEN)){
+                color = Color.GREEN;
+            } else
+                color = Color.MULTICOLOR;
+        }
+        return color;
+    }
+
+}
+
+package ru.aizen;
+
+import ru.aizen.card.Mana;
+import ru.aizen.card.ManaCost;
+import ru.aizen.card.ManaPool;
+
+public class Main {
+
+    public static void main(String[] args) {
+	// write your code here
+        Mana m1 = Mana.from("12");
+        Mana m2 = Mana.from(ManaPool.BLACK);
+        Mana m3 = Mana.from(ManaPool.RED);
+
+        ManaCost manaCost = new ManaCost();
+        manaCost.addMana(m1);
+        manaCost.addMana(m2);
+        manaCost.addMana(m3);
+
+        System.out.println(manaCost.getConvertedManaCost());
+        System.out.println(manaCost.getCost());
+        System.out.println(manaCost.getColor());
+    }
+}
+
+
+
