@@ -1,0 +1,12 @@
+CREATE PROCEDURE add_types_json(ID INT, type_data VARCHAR(255))
+BEGIN
+	DROP TEMPORARY TABLE IF EXISTS temp;
+	CREATE TEMPORARY TABLE temp(val CHAR(35) );
+	SET @SQL = concat("insert into temp (val) values ('", REPLACE(type_data, ";", "'),('"),"');");
+	PREPARE stmt FROM @SQL;
+	EXECUTE stmt;
+	SELECT @super_type := type_id FROM card_type WHERE type_name IN (SELECT val from temp) AND type_def = 'SUPERTYPE';
+	SELECT @type_list := json_arrayagg(type_id) FROM card_type WHERE type_name IN (SELECT val from temp) AND type_def = 'TYPE';
+	SELECT @sub_type_list := JSON_ARRAYAGG(type_id) FROM card_type WHERE type_name IN (SELECT val from temp) AND type_def = 'SUBTYPE';
+UPDATE card_details SET `type` = json_object('supertype', @super_type, 'types', @type_list, 'subtypes', @sub_type_list) WHERE card_ID = ID;	
+END;
