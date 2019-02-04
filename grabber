@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ru.aizen</groupId>
+    <artifactId>grabber</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.11.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-dbcp2</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.15</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
+
+package ru.aizen.parser;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import ru.aizen.Language;
+import ru.aizen.card.Card;
+import ru.aizen.dao.GathererDao;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+
+public class LanguageParser implements PageParser{
+    private static final String URL = "http://gatherer.wizards.com/Pages/Card/Languages.aspx?multiverseid=";
+    private final GathererDao dao;
+
+    public LanguageParser(GathererDao dao) {
+        this.dao = dao;
+    }
+
+    public void parse(int id) throws IOException {
+        //checkIsNeedToParse();
+        var page = Jsoup.connect(URL + id).timeout(20000).get();
+        if (!page.title().contains("multiverseid"))
+            return;
+        var items = page.getElementsByClass("cardItem");
+        List<Card> cards = items.stream()
+                .map(i -> parseCard(i.getElementsByTag("td")))
+                .collect(Collectors.toList());
+    }
+
+    public Card parseCard(Elements td){
+        Element link = td.get(0).selectFirst("a");
+        return Card.builder()
+                .setMultiverseID(multiVerseId(link))
+                .setName(name(link))
+                .setLanguage(language(td.get(1)))
+                .build();
+    }
+
+    private Integer multiVerseId(Element element) {
+        return Integer.parseInt(element.attr("href")
+                .replace("Details.aspx?multiverseid=", ""));
+    }
+
+    private String name(Element element) {
+        return element.text();
+    }
+
+
+    private Language language(Element element) {
+        return Language.from(element.text());
+    }
+}
+
+package ru.aizen;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.junit.Test;
+import ru.aizen.dao.GathererDao;
+import ru.aizen.parser.LanguageParser;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+public class LanguageParserTest {
+
+    @Test
+    public void parserLanguagePage() throws SQLException, IOException {
+        BasicDataSource dataSource = new BasicDataSource();
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/magic");
+        dataSource.setUsername("root");
+        dataSource.setPassword("root");
+        GathererDao dao = new GathererDao(dataSource.getConnection());
+        LanguageParser parser = new LanguageParser(dao);
+        parser.parse(213421);
+    }
+}
+
