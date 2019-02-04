@@ -1,0 +1,221 @@
+package ru.aizen.card;
+
+
+import ru.aizen.Language;
+import ru.aizen.card.mana.ManaCost;
+import ru.aizen.card.type.CardType;
+
+public class Card {
+    private int mulriverseId;
+    private Language language;
+    private String name;
+    private ManaCost manaCost;
+    private String imageUrl;
+    private CardType cardType;
+    private Rarity rarity;
+    private String expansionSet;
+    private String text;
+    private String flavorText;
+    private String watermark;
+    private Stats stats;
+    private String number;
+    private String artist;
+
+    public static Builder builder() {
+        return new Card().new Builder();
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getManaCost() {
+        return manaCost.getCost();
+    }
+
+    public int getConvertedManaCost() {
+        return manaCost.getConvertedManaCost();
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public String getCardTypes() {
+        return cardType.toString();
+    }
+
+    public Rarity getRarity() {
+        return rarity;
+    }
+
+    public String getExpansionSet() {
+        return expansionSet;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public String getFlavorText() {
+        return flavorText;
+    }
+
+    public String getWatermark() {
+        return watermark;
+    }
+
+    public String getStatName() {
+        return stats.getStatName(cardType);
+    }
+
+    public String getStats() {
+        return stats.getStats(cardType);
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Builder setMultiverseID(int multiverseID){
+            Card.this.mulriverseId = multiverseID;
+            return this;
+        }
+
+        public Builder setName(String name){
+            Card.this.name = name;
+            return this;
+        }
+        public Builder setLanguage(Language language){
+            Card.this.language = language;
+            return this;
+        }
+        public Builder setExpansionSet(String expansionSet){
+            Card.this.expansionSet = expansionSet;
+            return this;
+        }
+        public Builder setNumber(String number){
+            Card.this.number = number;
+            return this;
+        }
+        public Builder setManaCost(ManaCost manaCost){
+            Card.this.manaCost = manaCost;
+            return this;
+        }
+        public Builder setCardType(CardType cardType){
+            Card.this.cardType = cardType;
+            return this;
+        }
+        public Builder setRarity(Rarity rarity){
+            Card.this.rarity = rarity;
+            return this;
+        }
+        public Builder setText(String text){
+            Card.this.text = text;
+            return this;
+        }
+        public Builder setFlavorText(String flavorText){
+            Card.this.flavorText = flavorText;
+            return this;
+        }
+        public Builder setStats(Stats stats){
+            Card.this.stats = stats;
+            return this;
+        }
+        public Builder setWatermark(String watermark){
+            Card.this.watermark = watermark;
+            return this;
+        }
+        public Builder setArtist(String artist){
+            Card.this.artist = artist;
+            return this;
+        }
+
+        public Card build(){
+            return Card.this;
+        }
+    }
+}
+
+package ru.aizen.card;
+
+import ru.aizen.card.type.CardType;
+import ru.aizen.card.type.SpellType;
+
+public class Stats {
+    private int loyalty;
+    private int power;
+    private int toughness;
+
+    public String getStats(CardType type){
+        if (isCreature(type)){
+            return power + "/" + toughness;
+        } else if (isPlaneswalker(type)){
+            return String.valueOf(loyalty);
+        } else {
+            return "";
+        }
+    }
+
+    public String getStatName(CardType type){
+        if (isCreature(type)){
+            return StatName.P_T;
+        } else if (isPlaneswalker(type)){
+            return StatName.LOYALTY;
+        } else {
+            return "";
+        }
+    }
+
+    private boolean isCreature(CardType type){
+        return type.getSpellType() == SpellType.CREATURE || type.getSpellType() == SpellType.ARTIFACT_CREATURE;
+    }
+
+    private boolean isPlaneswalker(CardType type){
+        return type.getSpellType() == SpellType.PLANESWALKER;
+    }
+
+    private class StatName{
+        private static final String LOYALTY = "Loyalty";
+        private static final String P_T = "P/T";
+    }
+
+    public class Builder{
+
+        private Builder(){
+        }
+
+        public Builder setPower(int power){
+            Stats.this.power = power;
+            return this;
+        }
+
+        public Builder setToughness(int toughness){
+            Stats.this.toughness = toughness;
+            return this;
+        }
+
+        public Builder setLoyalty(int loyalty){
+            Stats.this.loyalty = loyalty;
+            return this;
+        }
+
+        public Stats build(){
+            return Stats.this;
+        }
+    }
+}
+
