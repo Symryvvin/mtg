@@ -1,27 +1,20 @@
-DROP TABLE IF EXISTS parse_status;
-DROP TABLE IF EXISTS page_parser;
-CREATE TABLE parse_status (
-    status_ID INT NOT NULL,
-    status_value VARCHAR(10) NOT NULL,
-    PRIMARY KEY(status_ID),
-    UNIQUE INDEX status_ID_UNIQUE (status_ID),
-    UNIQUE INDEX status_value_UNIQUE (status_value)
+DROP TABLE IF EXISTS page_parse_status;
+DROP TABLE IF EXISTS page;
+CREATE TABLE `page` (
+	`page_ID` INT NOT NULL,
+	`name` VARCHAR(15) NOT NULL,
+	`url` TEXT NOT NULL,	
+	PRIMARY KEY (page_ID)	
 );
-START TRANSACTION;
-INSERT INTO parse_status VALUES(0, 'SUCCESS');
-INSERT INTO parse_status VALUES(1, 'NOT_PARSED');
-INSERT INTO parse_status VALUES(2, 'EMPTY');
-INSERT INTO parse_status VALUES(3, 'ERROR');
-COMMIT;
-
-CREATE TABLE page_parser (
-    multiverse_ID INT NOT NULL,
-    details_status INT DEFAULT 1,
-    language_status INT DEFAULT 1,
-    legality_status INT DEFAULT 1,
-    PRIMARY KEY( multiverse_ID),
-    UNIQUE INDEX  multiverse_ID_UNIQUE ( multiverse_ID),
-    FOREIGN KEY (details_status) REFERENCES parse_status (status_ID),
-    FOREIGN KEY (language_status) REFERENCES parse_status (status_ID),
-    FOREIGN KEY (legality_status) REFERENCES parse_status (status_ID)
+INSERT INTO page (page_id, NAME, url) VALUES (1, 'Details_Oracle', 'http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=');
+INSERT INTO page (page_ID, name, url) VALUES (2, 'Details_Oracle', 'http://gatherer.wizards.com/Pages/Card/Details.aspx?printed=false&multiverseid=');
+INSERT INTO page (page_ID, name, url) VALUES (3, 'Legality', 'http://gatherer.wizards.com/Pages/Card/Printings.aspx?multiverseid=');
+INSERT INTO page (page_ID, name, url) VALUES (4, 'Language', 'http://gatherer.wizards.com/Pages/Card/Languages.aspx?multiverseid=');
+CREATE TABLE `page_parse_status` (
+    `multiverse_ID` INT NOT NULL,
+    `page_id` INT NOT NULL,
+    `status` ENUM('NOT_PARSED', 'EMPTY', 'ERROR', 'SUCCESS') NOT NULL,
+    PRIMARY KEY (`multiverse_ID`),
+    UNIQUE INDEX `multiverse_ID_UNIQUE` (`multiverse_ID`),
+    INDEX `status_idx` (`status`)
 );
