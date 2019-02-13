@@ -1,3 +1,301 @@
+package ru.aizen.card.type;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class CardType {
+    private SuperType superType;
+    private SpellType spellType;
+    private List<String> subTypes;
+
+    public CardType(String inlineTypes) {
+        if (inlineTypes.contains("—")) {
+            String[] types = inlineTypes.split(" — ");
+            String type = types[0];
+            superType = SuperType.from(type);
+            if (superType != null) {
+                type = type.replace(superType.getName(), " ");
+            }
+            spellType = SpellType.from(type);
+            subTypes = Arrays.asList(types[1].split(" "));
+        } else {
+            superType = null;
+            spellType = SpellType.from(inlineTypes);
+            subTypes = null;
+        }
+    }
+
+    public SuperType getSuperType() {
+        return superType;
+    }
+
+    public SpellType getSpellType() {
+        return spellType;
+    }
+
+    public List<String> getSubTypes() {
+        return subTypes;
+    }
+
+    @Override
+    public String toString() {
+        return (superType != null ? superType.getName() + " " : "") +
+                spellType.getName() +
+                (subTypes != null ? " —" + subTypes.stream()
+                        .reduce("", (x, y) -> x + " " + y) : "");
+    }
+}
+
+package ru.aizen.card;
+
+import ru.aizen.card.type.SpellType;
+
+import java.util.Arrays;
+
+public enum Rarity {
+    COMMON("Common"),
+    UNCOMMON("Uncommon"),
+    RARE("Rare"),
+    MYTHIC("Mythic");
+
+    private String name;
+
+    Rarity(String name) {
+        this.name = name;
+    }
+
+    public static Rarity from(String rarity){
+        return Arrays.stream(Rarity.values())
+                .filter(t -> t.name.equals(rarity))
+                .findAny()
+                .orElse(null);
+    }
+}
+
+package ru.aizen.card;
+
+import ru.aizen.card.type.CardType;
+import ru.aizen.card.type.SpellType;
+
+public class Stats {
+    private SpellType type;
+    private int loyalty;
+    private int power;
+    private int toughness;
+
+    public Stats(SpellType type, String value) {
+        this.type = type;
+        if (isCreature(type)) {
+            String[] pt = value.split("/");
+            power = Integer.parseInt(pt[0]);
+            toughness = Integer.parseInt(pt[1]);
+        } else if (isPlaneswalker(type)) {
+            loyalty = Integer.parseInt(value);
+        }
+    }
+
+    public String getStats() {
+        if (isCreature(type)) {
+            return power + "/" + toughness;
+        } else if (isPlaneswalker(type)) {
+            return String.valueOf(loyalty);
+        } else {
+            return "";
+        }
+    }
+
+    public String getStatName() {
+        if (isCreature(type)) {
+            return StatName.P_T;
+        } else if (isPlaneswalker(type)) {
+            return StatName.LOYALTY;
+        } else {
+            return "";
+        }
+    }
+
+    private boolean isCreature(SpellType type) {
+        return type == SpellType.CREATURE || type == SpellType.ARTIFACT_CREATURE;
+    }
+
+    private boolean isPlaneswalker(SpellType type) {
+        return type == SpellType.PLANESWALKER;
+    }
+
+    private class StatName {
+        private static final String LOYALTY = "Loyalty";
+        private static final String P_T = "P/T";
+    }
+}
+
+package ru.aizen.card.mana;
+
+import ru.aizen.card.Color;
+
+import java.util.AbstractMap;
+import java.util.Map;
+
+import static ru.aizen.card.Color.*;
+
+public class Mana {
+    public static final Map<String, Mana> pool = Map.ofEntries(
+            new AbstractMap.SimpleEntry<>("Variable Colorless", new Mana(0, "{X}", "Variable Colorless", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("White", new Mana(1, "{W}", "White", WHITE)),
+            new AbstractMap.SimpleEntry<>("Blue", new Mana(1, "{U}", "Blue", BLUE)),
+            new AbstractMap.SimpleEntry<>("Black", new Mana(1, "{B}", "Black", BLACK)),
+            new AbstractMap.SimpleEntry<>("Red", new Mana(1, "{R}", "Red", RED)),
+            new AbstractMap.SimpleEntry<>("Green", new Mana(1, "{G}", "Green", GREEN)),
+            new AbstractMap.SimpleEntry<>("Colorless", new Mana(1, "{C}", "Colorless", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("Phyrexian White", new Mana(1, "{WP}", "Phyrexian White", WHITE)),
+            new AbstractMap.SimpleEntry<>("Phyrexian Blue", new Mana(1, "{UP}", "Phyrexian Blue", BLUE)),
+            new AbstractMap.SimpleEntry<>("Phyrexian Black", new Mana(1, "{BP}", "Phyrexian Black", BLACK)),
+            new AbstractMap.SimpleEntry<>("Phyrexian Red", new Mana(1, "{RP}", "Phyrexian Red", RED)),
+            new AbstractMap.SimpleEntry<>("Phyrexian Green", new Mana(1, "{GP}", "Phyrexian Green", GREEN)),
+            new AbstractMap.SimpleEntry<>("White or Blue", new Mana(1, "{WU}", "White or Blue", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("White or Black", new Mana(1, "{WB}", "White or Black", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Red or White", new Mana(1, "{RW}", "Red or White", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Green or White", new Mana(1, "{GW}", "Green or White", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Red or Green", new Mana(1, "{RG}", "Red or Green", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Blue or Red", new Mana(1, "{UR}", "Blue or Red", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Blue or Black", new Mana(1, "{UB}", "Blue or Black", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Black or Red", new Mana(1, "{BR}", "Black or Red", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("Black or Green", new Mana(1, "{BG}", "Black or Green", MULTICOLOR)),
+            new AbstractMap.SimpleEntry<>("1", new Mana(1, "{1}", "1", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("2", new Mana(2, "{2}", "2", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("3", new Mana(3, "{3}", "3", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("4", new Mana(4, "{4}", "4", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("5", new Mana(5, "{5}", "5", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("6", new Mana(6, "{6}", "6", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("7", new Mana(7, "{7}", "7", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("8", new Mana(8, "{8}", "8", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("9", new Mana(9, "{9}", "9", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("10", new Mana(10, "{10}", "10", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("11", new Mana(11, "{11}", "11", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("12", new Mana(12, "{12}", "12", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("13", new Mana(13, "{13}", "13", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("14", new Mana(14, "{14}", "14", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("15", new Mana(15, "{15}", "15", COLORLESS)),
+            new AbstractMap.SimpleEntry<>("16", new Mana(16, "{16}", "16", COLORLESS))
+    );
+
+    private int cost;
+    private String value;
+    private String name;
+    private Color color;
+
+    public static Mana from(String name) throws Exception {
+        Mana result = pool.get(name);
+        if (result == null)
+            throw new Exception("Mana for value " + name + " is not presented in mana pool");
+        return result;
+    }
+
+    private Mana(int cost, String value, String name, Color color) {
+        this.cost = cost;
+        this.value = value;
+        this.name = name;
+        this.color = color;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public boolean isColored() {
+        return color != COLORLESS;
+    }
+
+    @Override
+    public String toString() {
+        return "Mana{" +
+                "cost=" + cost +
+                ", value='" + value + '\'' +
+                ", name='" + name + '\'' +
+                ", color=" + color +
+                '}';
+    }
+}
+
+package ru.aizen.card.type;
+
+import java.util.Arrays;
+
+public enum SuperType {
+    BASIC("Basic"),
+    ELITE("Elite"),
+    HOST("Host"),
+    LEGENDARY("Legendary"),
+    ONGOING("Ongoing"),
+    SNOW("Snow"),
+    WORLD("World");
+
+    private String name;
+
+    SuperType(String name) {
+        this.name = name;
+    }
+
+    public static SuperType from(String types) {
+        return Arrays.stream(SuperType.values())
+                .filter(t -> types.contains(t.name))
+                .findAny()
+                .orElse(null);
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+package ru.aizen.card.type;
+
+import java.util.Arrays;
+
+public enum SpellType {
+    ARTIFACT("Artifact"),
+    CREATURE("Creature"),
+    TRIBAL("Tribal"),
+    ENCHANTMENT("Enchantment"),
+    LAND("Land"),
+    PLANESWALKER("Planeswalker"),
+    INSTANT("Instant"),
+    SORCERY("Sorcery"),
+    ARTIFACT_LAND("Artifact Land"),
+    ARTIFACT_CREATURE("Artifact Creature"),
+    ENCHANTMENT_ARTIFACT("Enchantment Artifact"),
+    ENCHANTMENT_CREATURE("Enchantment Creature"),
+    LAND_CREATURE("Land Creature");
+
+    private String name;
+
+    SpellType(String name) {
+        this.name = name;
+    }
+
+    public static SpellType from(String type) {
+        return Arrays.stream(SpellType.values())
+                .filter(t -> t.name.equals(type.trim()))
+                .findAny()
+                .orElse(null);
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
 package ru.aizen.card;
 
 
@@ -6,11 +304,11 @@ import ru.aizen.card.mana.ManaCost;
 import ru.aizen.card.type.CardType;
 
 public class Card {
-    private int mulriverseId;
+    private static final String IMAGE_URL = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=";
+    private int multiverseID;
     private Language language;
     private String name;
     private ManaCost manaCost;
-    private String imageUrl;
     private CardType cardType;
     private Rarity rarity;
     private String expansionSet;
@@ -21,8 +319,12 @@ public class Card {
     private String number;
     private String artist;
 
-    public static Builder builder() {
-        return new Card().new Builder();
+    private Card(int multiverseID) {
+        this.multiverseID = multiverseID;
+    }
+
+    public static Builder builder(int mulriverseId) {
+        return new Card(mulriverseId).new Builder();
     }
 
     public Language getLanguage() {
@@ -42,7 +344,7 @@ public class Card {
     }
 
     public String getImageUrl() {
-        return imageUrl;
+        return IMAGE_URL + multiverseID;
     }
 
     public String getCardTypes() {
@@ -69,12 +371,8 @@ public class Card {
         return watermark;
     }
 
-    public String getStatName() {
-        return stats.getStatName(cardType);
-    }
-
     public String getStats() {
-        return stats.getStats(cardType);
+        return stats.getStatName() + ": " + stats.getStats();
     }
 
     public String getNumber() {
@@ -85,137 +383,148 @@ public class Card {
         return artist;
     }
 
+    public int getMultiverseID() {
+        return multiverseID;
+    }
+
+    @Override
+    public String toString() {
+        return "Card{" +
+                "multiverseID=" + multiverseID +
+                ", language=" + language +
+                ", name='" + name + '\'' +
+                ", manaCost=" + manaCost +
+                ", cardType=" + cardType +
+                ", rarity=" + rarity +
+                ", expansionSet='" + expansionSet + '\'' +
+                ", text='" + text + '\'' +
+                ", flavorText='" + flavorText + '\'' +
+                ", watermark='" + watermark + '\'' +
+                ", stats=" + stats +
+                ", number='" + number + '\'' +
+                ", artist='" + artist + '\'' +
+                '}';
+    }
+
     public class Builder {
 
         private Builder() {
         }
 
-        public Builder setMultiverseID(int multiverseID){
-            Card.this.mulriverseId = multiverseID;
-            return this;
-        }
-
-        public Builder setName(String name){
+        public Builder setName(String name) {
             Card.this.name = name;
             return this;
         }
-        public Builder setLanguage(Language language){
+
+        public Builder setLanguage(Language language) {
             Card.this.language = language;
             return this;
         }
-        public Builder setExpansionSet(String expansionSet){
+
+        public Builder setExpansionSet(String expansionSet) {
             Card.this.expansionSet = expansionSet;
             return this;
         }
-        public Builder setNumber(String number){
+
+        public Builder setNumber(String number) {
             Card.this.number = number;
             return this;
         }
-        public Builder setManaCost(ManaCost manaCost){
+
+        public Builder setManaCost(ManaCost manaCost) {
             Card.this.manaCost = manaCost;
             return this;
         }
-        public Builder setCardType(CardType cardType){
+
+        public Builder setCardType(CardType cardType) {
             Card.this.cardType = cardType;
             return this;
         }
-        public Builder setRarity(Rarity rarity){
+
+        public Builder setRarity(Rarity rarity) {
             Card.this.rarity = rarity;
             return this;
         }
-        public Builder setText(String text){
+
+        public Builder setText(String text) {
             Card.this.text = text;
             return this;
         }
-        public Builder setFlavorText(String flavorText){
+
+        public Builder setFlavorText(String flavorText) {
             Card.this.flavorText = flavorText;
             return this;
         }
-        public Builder setStats(Stats stats){
+
+        public Builder setStats(Stats stats) {
             Card.this.stats = stats;
             return this;
         }
-        public Builder setWatermark(String watermark){
+
+        public Builder setWatermark(String watermark) {
             Card.this.watermark = watermark;
             return this;
         }
-        public Builder setArtist(String artist){
+
+        public Builder setArtist(String artist) {
             Card.this.artist = artist;
             return this;
         }
 
-        public Card build(){
+        public Card build() {
             return Card.this;
         }
     }
 }
 
-package ru.aizen.card;
+package ru.aizen;
 
+import org.junit.Assert;
+import org.junit.Test;
+import ru.aizen.card.Stats;
 import ru.aizen.card.type.CardType;
 import ru.aizen.card.type.SpellType;
+import ru.aizen.card.type.SuperType;
 
-public class Stats {
-    private int loyalty;
-    private int power;
-    private int toughness;
+import java.util.Arrays;
+import java.util.Collections;
 
-    public String getStats(CardType type){
-        if (isCreature(type)){
-            return power + "/" + toughness;
-        } else if (isPlaneswalker(type)){
-            return String.valueOf(loyalty);
-        } else {
-            return "";
-        }
+public class TypeTest {
+
+    @Test
+    public void parseWithSuperType(){
+        String types = "Legendary Artifact Creature — Zombie Wizard";
+        CardType cardType = new CardType(types);
+        Assert.assertEquals(SuperType.LEGENDARY, cardType.getSuperType());
+        Assert.assertEquals(SpellType.ARTIFACT_CREATURE, cardType.getSpellType());
+        Assert.assertEquals(Arrays.asList("Zombie", "Wizard"), cardType.getSubTypes());
+        Assert.assertEquals("Legendary Artifact Creature — Zombie Wizard", cardType.toString());
+
+        String types2 = "Enchantment Artifact — Treasure";
+        CardType cardType2 = new CardType(types2);
+        Assert.assertNull(cardType2.getSuperType());
+        Assert.assertEquals(SpellType.ENCHANTMENT_ARTIFACT, cardType2.getSpellType());
+        Assert.assertEquals(Collections.singletonList("Treasure"), cardType2.getSubTypes());
+        Assert.assertEquals("Enchantment Artifact — Treasure", cardType2.toString());
+
+        String types3 = "Instant";
+        CardType cardType3 = new CardType(types3);
+        Assert.assertNull(cardType3.getSuperType());
+        Assert.assertEquals(SpellType.INSTANT, cardType3.getSpellType());
+        Assert.assertNull(cardType3.getSubTypes());
+        Assert.assertEquals("Instant", cardType3.toString());
     }
 
-    public String getStatName(CardType type){
-        if (isCreature(type)){
-            return StatName.P_T;
-        } else if (isPlaneswalker(type)){
-            return StatName.LOYALTY;
-        } else {
-            return "";
-        }
-    }
-
-    private boolean isCreature(CardType type){
-        return type.getSpellType() == SpellType.CREATURE || type.getSpellType() == SpellType.ARTIFACT_CREATURE;
-    }
-
-    private boolean isPlaneswalker(CardType type){
-        return type.getSpellType() == SpellType.PLANESWALKER;
-    }
-
-    private class StatName{
-        private static final String LOYALTY = "Loyalty";
-        private static final String P_T = "P/T";
-    }
-
-    public class Builder{
-
-        private Builder(){
-        }
-
-        public Builder setPower(int power){
-            Stats.this.power = power;
-            return this;
-        }
-
-        public Builder setToughness(int toughness){
-            Stats.this.toughness = toughness;
-            return this;
-        }
-
-        public Builder setLoyalty(int loyalty){
-            Stats.this.loyalty = loyalty;
-            return this;
-        }
-
-        public Stats build(){
-            return Stats.this;
-        }
+    @Test
+    public void parseStats(){
+        String pt = "3/9";
+        Stats stats = new Stats(SpellType.CREATURE, pt);
+        System.out.println(stats.getStatName() + ": " + stats.getStats());
+        String loyality = "6";
+        Stats stats2 = new Stats(SpellType.PLANESWALKER, loyality);
+        System.out.println(stats2.getStatName() + ": " + stats2.getStats());
     }
 }
+
+
 
