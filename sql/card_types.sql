@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS card_type;
-
+DROP TABLE IF EXISTS `card_type`;
+DROP TABLE IF EXISTS `card_type_loc`;
 /* CARD_TYPE - list of card types */
 CREATE TABLE card_type (
     type_ID INT NOT NULL AUTO_INCREMENT,
@@ -430,3 +430,12 @@ INSERT INTO card_type (type_name, type_def) VALUES('Zendikar','SUBTYPE');
 INSERT INTO card_type (type_name, type_def) VALUES('Zombie','SUBTYPE');
 INSERT INTO card_type (type_name, type_def) VALUES('Zubera','SUBTYPE');
 COMMIT;
+/* CARD_TYPE_LOC - localization data of card types */
+CREATE TABLE `card_type_loc` (
+    `type_ID` INT NOT NULL,
+    `translation` VARCHAR(20) NOT NULL,
+    `lang_code` VARCHAR(2) NOT NULL,
+    UNIQUE INDEX `translation_UNIQUE` (`translation`),
+	FOREIGN KEY (`type_ID`) REFERENCES `card_type` (`format_ID`),
+	FOREIGN KEY (`lang_code`) REFERENCES `lang` (`code`)
+);
