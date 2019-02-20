@@ -1,1 +1,20 @@
 https://topdeck.ru/forums/topic/144062-%D1%81%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%B8%D1%89%D0%B0-%D1%80%D1%83%D1%84%D0%BE%D0%B9%D0%BB-%D0%B8%D0%BA%D1%81%D0%B0%D0%BB%D0%B0%D0%BD-rix-grn-m19-fnm/?tab=comments#comment-1222205
+
+
+
+Алгоритм парсинга страницы http://gatherer.wizards.com/Pages/Card/Languages.aspx с параметром multiverseid
+
+1. Проверка на наличие данных
+	1.1. Если страница пустая возвращаем null
+2. Проверка на наличие данных локализации
+	2.1. Если их нет, это означает, что карта издавалась только на английском языке. Создаем объект типа Card
+		2.1.1. Заполняем name из элемента с id ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay
+		2.1.2. Заполняем multiverseid значением из параметра
+		2.1.3. Значение языка language code "en"
+		2.1.4. Значение oracleid = multiverseid
+		2.1.5. Добавляем объект в список и возвращаем
+	2.2. Если данные существуют, то парсим элементы с классом "cardItem", создавая для каждого объект Card
+		2.2.1. Заполняем name, language code из таблицы
+		2.2.2. Заполняем multiverseid из параметра ссылки в наименовании
+		2.2.3. Ищем элемент с language code "en" и устанавливаем всем элементам oracleid = multiverseid этого элемента
+		2.2.4. Возвращаем списко элементов
