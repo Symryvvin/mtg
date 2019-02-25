@@ -18,3 +18,26 @@ https://topdeck.ru/forums/topic/144062-%D1%81%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%B
 		2.2.2. Заполняем multiverseid из параметра ссылки в наименовании
 		2.2.3. Ищем элемент с language code "en" и устанавливаем всем элементам oracleid = multiverseid этого элемента
 		2.2.4. Возвращаем списко элементов
+
+
+
+config.ini
+
+[URL]
+host = gatherer.wizards.com
+oracle = Pages/Card/Details.aspx
+printed = Pages/Card/Details.aspx?printed=true
+legality = Pages/Card/Printings.aspx
+language = Pages/Card/Languages.aspx 
+
+[PATHS]
+skip.lists = ['lists/empty_pages_identifiers.list', 'lists/processed_page_identifiers.list']
+data.multiverse = data/card_multiverse/
+data.localization = data/card_lozalization_data/
+data.oracle = data/card_oracle_data/
+data.details = data/card_details/
+data.stats = data/card_stats/
+
+[LIMITS]
+max_id = 460172
+max_threads = 50
