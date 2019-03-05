@@ -1,5 +1,36 @@
 https://topdeck.ru/forums/topic/144062-%D1%81%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%B8%D1%89%D0%B0-%D1%80%D1%83%D1%84%D0%BE%D0%B9%D0%BB-%D0%B8%D0%BA%D1%81%D0%B0%D0%BB%D0%B0%D0%BD-rix-grn-m19-fnm/?tab=comments#comment-1222205
 
+CREATE TABLE t1 (jdoc JSON);
+
+INSERT INTO t1 VALUES('{"sypertype": 1, "types": [2,5], "subtypes": [54,123]}');
+INSERT INTO t1 VALUES('{"sypertype": 1, "types": [24,5], "subtypes": [54,1223]}');
+INsert into t1 values('{"sypertype": 2, "types": [1,4], "subtypes": [154,123]}');
+
+SELECT jdoc FROM t1;
+
+select jdoc->>"$.types" FROM t1;
+
+SELECT json_extract(jdoc, '$.subtypes') FROM t1;
+
+SELECT * FROM t1 WHERE json_contains(
+	jdoc, 
+	(SELECT CAST((type_id) AS CHAR) FROM card_type WHERE type_name = 'Legendary'), 
+	'$.types');
+
+select CAST((type_ID) AS CHAR) from card_type where type_name = 'Legendary';
+
+
+CREATE TABLE facts (sentence JSON);
+
+INSERT INTO facts VALUEs (JSON_OBJECT("mascot", "Our mascot is a dolphin named \"Sakila\"."));
+
+SELECT sentence FROM facts;
+
+
+SELECT sentence->>"$.mascot" FROM facts;
+
+
+
 
 
 Алгоритм парсинга страницы http://gatherer.wizards.com/Pages/Card/Languages.aspx с параметром multiverseid
