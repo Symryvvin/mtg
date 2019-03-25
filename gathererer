@@ -133,3 +133,43 @@ KO("Korean", "ko", "KR"),
 PT_BR("Portuguese (Brazil)", "pt", "PT"),
 RU("Russian", "ru", "RU"),
 ES("Spanish", "es", "ES");
+
+
+private String pageName;
+private Map<String, Element> data;
+	
+	
+public DetailsParser(int multiverseID, boolean isOracle) {
+	this.multiverseID = multiverseID;
+	this.isOracle = isOracle;
+}
+
+
+public Card parse() {
+	///---
+	var contents = page.select(CARD_CONTENT);
+	pageName = page.getElementById(EN_NAME_ELEMENT).text(); 
+	data = contents.stream()
+		.map(DivRow::new))
+		.filter(dr -> pageName.equals(dr.getValue(NAME).text()))
+		.findFirst()
+		.orElseThrow(() -> new ParserException("Actual page name " + actualPageName + " not match with any card names in contents. " +
+				"Use parse oracle data only with oracle multiverseID"));
+	return parseCard();
+}	
+
+public class DivRow extend HashMap<String, Element> {
+
+    public DivRow(Elements content) {
+		var rows = content.getElementsByClass("row");
+		rows.stream()
+             .filter(row -> !div.selectFirst("div.label").text().isEmpty())
+			 .forEach(row -> put(
+					div.selectFirst("div.label").text().replace(":", ""),
+					div.selectFirst("div.value")));
+    }
+
+    public Element getValue(String label) {
+        return get(label);
+    }
+}
