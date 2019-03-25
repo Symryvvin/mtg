@@ -1,3 +1,36 @@
+Развить идею, что класс Card это реальный объект идентифицированный бумажным носителем
+Разбить на классы наследники NormalCard, DoubleFacedCard, SplitCard, MeltCard, FlipCard
+
+NormalCard {
+	multiverseID
+	oracleID
+	Content {
+		все остальные данные из divrow
+	}
+}
+
+DoubleFacedCard {
+	private static final FACE_ID = 0;
+	private static final BACK_ID = 1;
+	int[] multiverseIDs
+	int[] oracleIDs
+	Content[] contents {
+		все остальные данные из divrow
+	}
+}
+
+SplitCard {
+	private static final LEFT_ID = 0;
+	private static final RIGHT_ID = 1;	
+	int multiverseID
+	int oracleID
+	Content[] contents {
+		все остальные данные из divrow
+	}	
+}
+
+
+
 https://topdeck.ru/forums/topic/144062-%D1%81%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%B8%D1%89%D0%B0-%D1%80%D1%83%D1%84%D0%BE%D0%B9%D0%BB-%D0%B8%D0%BA%D1%81%D0%B0%D0%BB%D0%B0%D0%BD-rix-grn-m19-fnm/?tab=comments#comment-1222205
 
 CREATE TABLE t1 (jdoc JSON);
