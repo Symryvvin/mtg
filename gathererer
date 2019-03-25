@@ -35,40 +35,101 @@ SELECT sentence->>"$.mascot" FROM facts;
 
 Алгоритм парсинга страницы http://gatherer.wizards.com/Pages/Card/Languages.aspx с параметром multiverseid
 
-1. Проверка на наличие данных
-	1.1. Если страница пустая возвращаем null
-2. Проверка на наличие данных локализации
-	2.1. Если их нет, это означает, что карта издавалась только на английском языке. Создаем объект типа Card
-		2.1.1. Заполняем name из элемента с id ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay
-		2.1.2. Заполняем multiverseid значением из параметра
-		2.1.3. Значение языка language code "en"
-		2.1.4. Значение oracleid = multiverseid
-		2.1.5. Добавляем объект в список и возвращаем
-	2.2. Если данные существуют, то парсим элементы с классом "cardItem", создавая для каждого объект Card
-		2.2.1. Заполняем name, language code из таблицы
-		2.2.2. Заполняем multiverseid из параметра ссылки в наименовании
-		2.2.3. Ищем элемент с language code "en" и устанавливаем всем элементам oracleid = multiverseid этого элемента
-		2.2.4. Возвращаем списко элементов
+package ru.aizen.card.mana;
 
+import ru.aizen.card.Color;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-config.ini
+public class ManaCost {
+    private List<Mana> cost;
+    private int convertedManaCost;
 
-[URL]
-host = gatherer.wizards.com
-oracle = Pages/Card/Details.aspx
-printed = Pages/Card/Details.aspx?printed=true
-legality = Pages/Card/Printings.aspx
-language = Pages/Card/Languages.aspx 
+    public ManaCost() {
+        cost = new ArrayList<>();
+    }
 
-[PATHS]
-skip.lists = ['lists/empty_pages_identifiers.list', 'lists/processed_page_identifiers.list']
-data.multiverse = data/card_multiverse/
-data.localization = data/card_lozalization_data/
-data.oracle = data/card_oracle_data/
-data.details = data/card_details/
-data.stats = data/card_stats/
+    public ManaCost addMana(String name) {
+        cost.add(Mana.from(name));
+        return this;
+    }
+	
+    public String getCost() {
+        return cost.stream()
+                .map(Mana::getValue)
+                .reduce("", (x, y) -> x + y);
+    }
 
-[LIMITS]
-max_id = 460172
-max_threads = 50
+    public int getConvertedManaCost() {
+        if (!cost.isEmpty())
+            return convertedManaCost;
+        return cost.stream()
+                .mapToInt(Mana::getCost)
+                .sum();
+    }
+	
+	public List<Color> getColors() {
+		if (!cost.isEmpty() && !onlyColorless()) {
+			return getColorsFromColoredMana();
+		}
+		return null;
+	}
+	
+	private boolean onlyColorless(){
+		return cost.stream().allMatch(m -> m.getColor() == Color.COLORLESS;
+	}
+
+    public Color getColor() {
+        if (cost.isEmpty()) {
+            return null;
+        }
+        if (onlyColorless()) {
+            return Color.COLORLESS;
+        }
+        List<Color> colors = getColorsFromColoredMana();
+        if (!colors.isEmpty()) {
+			for (Color c : Color.values()){
+				if (allMatch(colors, c)) {
+					return c;
+				}
+			}
+			return Color.MULTICOLOR;
+        }
+        return null;
+    }
+	
+	private List<Color> getColorsFromColoredMana() {
+		return cost.stream()
+                .filter(Mana::isColored)
+				.map(Mana:getColor)
+                .collect(Collectors.toList());
+	}
+	
+	private boolean allMatch(List<Color> colors, Color color) {
+		return colors.stream()
+				.allMatch(color);
+	}
+
+    public void setConvertedManaCost(String convertedManaCost) {
+        this.convertedManaCost = Integer.parseInt(convertedManaCost);
+    }
+
+    @Override
+    public String toString() {
+        return getCost() + "[" + getConvertedManaCost() + "] : " + getColor();
+    }
+}
+
+CN("Chinese Simplified", "cs", "CN"),
+ZH_TW("Chinese Traditional", "ct", "CN"),
+DE("German", "de", "DE"),
+EN("English", "en", "GB"),
+FR("French", "fr", "FR"),
+IT("Italian", "it", "IT"),
+JA("Japanese", "ja", "JP"),
+KO("Korean", "ko", "KR"),
+PT_BR("Portuguese (Brazil)", "pt", "PT"),
+RU("Russian", "ru", "RU"),
+ES("Spanish", "es", "ES");
