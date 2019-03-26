@@ -1,33 +1,94 @@
-Развить идею, что класс Card это реальный объект идентифицированный бумажным носителем
-Разбить на классы наследники NormalCard, DoubleFacedCard, SplitCard, MeltCard, FlipCard
-
-NormalCard {
-	multiverseID
-	oracleID
-	Content {
-		все остальные данные из divrow
+private Card getCardByName(String name) {
+	Card result = null;
+	try (PrepareStatement ps = connection.prepareStatement("SELECT multiverseID FROM card_localized_data where name = ?")) {
+		ps.setString(1, name);
 	}
+	try (PrepareStatement ps1 = connection.prepareStatement(
+	"SELECT guid, layout, face_id, back_id FROM card WHERE face_id = ? OR back_id = ?")) {
+		ps2.setString(1, multiverseID);
+		ps2.setString(2, multiverseID);
+		
+		var guid = rs.getString(1);
+		var layout = LayoutView.valueOf(rs.getString(2));
+		
+		switch(layout) {
+			case REGULAR: 
+				int multiverseID = rs.getInt(3);
+				int oracleID = getOracleID(multiverseID);
+				CardContent content = getContentByMultiverseID(card.getMultiverseID());
+				result = new RegularCard(guid, layout, faceID, content);
+			case DOUBLE_FACED: 
+				int faceID = rs.getInt(3);
+				int backID = rs.getInt(4);
+				int[] multiverseIDs = new int[]{faceID, backID};
+				int[] oracleIDs = new int[]{getOracleID(faceID), getOracleID(backID)};
+				CardContent faceContent = getContentByMultiverseID(multiverseIDs[0]);
+				CardContent backContent = getContentByMultiverseID(multiverseIDs[1]);
+				result = new DoubleFacedCard(guid, layout, multiverseIDs, oracleIDs, contents);
+			case SPLIT: 
+				int multiverseID = rs.getInt(3);
+				int oracleIDs = getOracleID(multiverseID);
+				CardContent[] contents = getContentByMultiverseID(multiverseID);
+				result = new SplitCard(guid, layout, multiverseID, oracleID, contents);
+		}
+	}
+	return result;
 }
 
-DoubleFacedCard {
-	private static final FACE_ID = 0;
-	private static final BACK_ID = 1;
-	int[] multiverseIDs
-	int[] oracleIDs
-	Content[] contents {
-		все остальные данные из divrow
-	}
-}
-
-SplitCard {
-	private static final LEFT_ID = 0;
-	private static final RIGHT_ID = 1;	
-	int multiverseID
-	int oracleID
-	Content[] contents {
-		все остальные данные из divrow
+private int getMeldLinkedID(int multiverseID) {
+	try (PrepareStatement ps = connection.prepareStatement("SELECT c1.face_ID FROM card c1 
+							JOIN card c2 ON c1.back_ID = c2.back_ID WHERE c2.face_ID = ?")) {
+		ps.setInt(1, multiverse_ID);
+		while (rs.next()){
+			return rs.getInt(1);
+		} else {
+			throw new CardDaoException("Can`t find linkedID for meld card by multiverseID (" + multiverseID + ")");
+		}
 	}	
 }
+
+private int getOracleID(int multiverseID) {
+	try (PrepareStatement ps = connection.prepareStatement("SELECT oracle_ID FROM card_metainfo WHERE multiverse_ID = ?")) {
+		ps.setInt(1, multiverse_ID);
+		if (rs.next()){
+			return rs.getInt(1);
+		} else {
+			throw new CardDaoException("Can`t find oracleID by multiverseID (" + multiverseID + ")");
+		}
+	}
+}
+
+
+
+2 view для lozalized and oracle data
+
+
+WITH lozalized as (
+SELECT m.multiverseID as multiverseID,
+	   m.oracleID
+	   m.layout,
+	   l.lang_code,
+	   l.name,
+	   l.types,
+	   l.text,
+	   l.flavor_text
+FROM card_localized_data l 
+JOIN card_metainfo m ON l.multiverseID = m.multiverseID
+WHERE name = ?)
+SELECT l.*
+	   d.manacost,
+	   d.types,
+	   w.watermark,
+	   d.expansion_id,
+	   r.rariry,
+	   d.number
+FROM card_details d JOIN lozalized l ON l.multiverseID = d.multiverseID
+JOIN watermark r ON d.watermark_ID = w.watermark_ID
+JOIN rarity r ON d.rarity_ID = r.rarity_ID
+
+
+
+
 
 
 
