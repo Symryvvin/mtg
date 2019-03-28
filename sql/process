@@ -1,0 +1,94 @@
+DROP TABLE IF EXISTS `lang`;
+CREATE TABLE `lang` (
+    `code` VARCHAR(5) NOT NULL,
+    `name` VARCHAR(20) NOT NULL,
+    PRIMARY KEY (`code`),
+    UNIQUE INDEX `name_UNIQUE` (`name`),
+	UNIQUE INDEX `code_UNIQUE` (`code`)
+);
+START TRANSACTION;
+INSERT INTO lang (code, lang_name) VALUES ('en', 'English');
+INSERT INTO lang (code, lang_name) VALUES ('ru', 'Russian');
+INSERT INTO lang (code, lang_name) VALUES ('de', 'German');
+INSERT INTO lang (code, lang_name) VALUES ('fr', 'French');
+INSERT INTO lang (code, lang_name) VALUES ('it', 'Italian');
+INSERT INTO lang (code, lang_name) VALUES ('es', 'Spanish');
+INSERT INTO lang (code, lang_name) VALUES ('pt', 'Portuguese (Brazil)');
+INSERT INTO lang (code, lang_name) VALUES ('ja', 'Japanese');
+INSERT INTO lang (code, lang_name) VALUES ('ko', 'Korean');
+INSERT INTO lang (code, lang_name) VALUES ('cs', 'Chinese Simplified');
+INSERT INTO lang (code, lang_name) VALUES ('ct', 'Chinese Traditional');
+COMMIT;
+
+DROP TABLE IF EXISTS `content_metainfo`;
+CREATE TABLE `content_metainfo` (
+    `multiverse_ID` INT NOT NULL,
+    `oracle_ID` INT NOT NULL,
+    `name` VARCHAR(200) NOT NULL,
+    `lang_code` VARCHAR(2) NOT NULL,
+    PRIMARY KEY (`multiverse_ID`),
+    UNIQUE INDEX `multiverse_ID_unique` (`multiverse_ID`),
+    INDEX `name` (`name`),
+    FOREIGN KEY (`lang_code`) REFERENCES lang (`code`)
+);
+
+Проверка на language
+SELECT 1 FROM content_metainfo WHERE multiverse_ID = ?;
+
+1. Этап ParseLanguage
+
+Наполняются данные в content_metainfo и empty_page_id
+ 
+DROP TABLE IF EXISTS `content_details`;
+CREATE TABLE `content_details` (
+    `oracle_ID` INT NOT NULL,
+    `oracle_name` VARCHAR(200) NOT NULL,
+    `manacost` VARCHAR(50),
+    `converted_mc` INT,
+    `types` JSON NOT NULL,
+    `text` TEXT,
+    `flavor_text` TEXT,
+    `watermark` VARCHAR(55),
+    `artist` VARCHAR(50) NOT NULL,
+    `expansion_code` VARCHAR(4) NOT NULL,
+    `rarity` VARCHAR(20) NOT NULL,
+    `number` VARCHAR(4) NOT NULL,
+    PRIMARY KEY (`oracle_ID`),
+    UNIQUE INDEX `oracle_ID_unique` (`oracle_ID`)
+);
+
+DROP TABLE IF EXISTS `stats`;
+CREATE TABLE `stats` (
+    `oracle_ID` INT NOT NULL,
+    `stat_type` ENUM('LOYALTY', 'POWER', 'TOUGHTESS'),
+    `value` INT
+);
+
+2. Этап ParseOracleData
+2.1 Получаем идентификаторы oracle_ID из content_metainfo, ко покотрым еще не заполнены данные в таблице content_details
+
+SELECT DISTINCT(m.oracle_ID) FROM content_metainfo m JOIN content_details d 
+ON m.oracle_ID = d.oracle_ID
+WHERE d.oracle_ID IS NULL and m.lang_code = 'en' WHERE;
+
+2.2 Парсим и записываем данные в content_details и stats 
+
+
+3. Этап ParseLocalizedData
+
+3.1. Получаем идентификаторы multiverse_ID из content_metainfo, ко покотрым еще не заполнены данные в таблице localized_content_data
+
+DROP TABLE IF EXISTS `localized_content_data`;
+CREATE TABLE `localized_content_data` (
+    `multiverse_ID` INT NOT NULL,
+    `data` JSON NOT NULL,
+	UNIQUE INDEX `multiverse_ID_unique` (`multiverse_ID`)
+);
+
+
+
+
+
+
+ 0319298246
+Проверка на legality
